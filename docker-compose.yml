@@ -1,0 +1,20 @@
+# Servicio de PostgreSQL exclusivo del piloto de tesis.
+#
+# Puerto host FIJO en 5544 — este es el único puerto que este proyecto debe
+# usar. No renombrar ni remapear: otros proyectos en esta máquina (p. ej.
+# postgres-dev) usan puertos distintos y no deben mezclarse con este servicio.
+services:
+  piloto-pbd-db:
+    image: postgres:16-alpine
+    container_name: piloto-pbd-db
+    environment:
+      POSTGRES_USER: piloto
+      POSTGRES_PASSWORD: piloto_dev_pw
+      POSTGRES_DB: piloto_pbd
+    ports:
+      - "5544:5432"
+    volumes:
+      - piloto_pbd_db_data:/var/lib/postgresql/data
+
+volumes:
+  piloto_pbd_db_data:
