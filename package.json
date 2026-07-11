@@ -1,0 +1,7 @@
+{
+  "name": "piloto-pbd",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Piloto de tesis: sistema de citas y consultoría médica con Privacidad desde el Diseño conforme a la LOPDP (Ecuador)",
+  "packageManager": "pnpm@11.8.0"
+}

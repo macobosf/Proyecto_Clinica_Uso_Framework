@@ -1,0 +1,141 @@
+// Piloto de tesis — Privacidad desde el Diseño conforme a la LOPDP (Ecuador)
+//
+// Convención de clasificación de datos:
+//   - Los modelos Usuario, Paciente y Cita contienen datos ORDINARIOS
+//     (identificación, contacto, logística de agendamiento).
+//   - El modelo Consulta contiene datos de categoría ESPECIAL / SENSIBLE
+//     (Art. 25 LOPDP: datos de salud). Todo el contenido clínico vive
+//     exclusivamente en este modelo, separado de la logística de la Cita.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Rol del personal interno dentro del sistema.
+enum Rol {
+  RECEPCION
+  MEDICO
+  ADMINISTRACION
+}
+
+/// Estado de una cita dentro de su ciclo de vida logístico.
+enum EstadoCita {
+  PROGRAMADA
+  ATENDIDA
+  CANCELADA
+}
+
+/// Personal interno del sistema (recepción, médicos, administración).
+/// Clasificación: ORDINARIA. No contiene datos de salud.
+model Usuario {
+  id           String   @id @default(uuid())
+  /// Login / identificación del usuario interno.
+  email        String   @unique
+  /// Hash de contraseña. Campo definido únicamente; el hashing se
+  /// implementará en un paso posterior (no en este andamiaje).
+  passwordHash String
+  /// Nombre para identificación del personal en la interfaz.
+  nombres      String
+  /// Rol funcional, usado para autorización en pasos posteriores.
+  rol          Rol
+  /// Baja lógica: preferida sobre el borrado físico para preservar
+  /// la integridad referencial de citas/consultas históricas.
+  activo       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  citasComoMedico     Cita[]     @relation("MedicoCitas")
+  consultasComoMedico Consulta[] @relation("MedicoConsultas")
+
+  @@map("usuarios")
+}
+
+/// Titular de datos: paciente atendido por la clínica.
+/// Clasificación: ORDINARIA. Datos demográficos y de contacto,
+/// sin contenido clínico (ver modelo Consulta).
+model Paciente {
+  id              String   @id @default(uuid())
+  /// Cédula: identificación unívoca del paciente frente al sistema.
+  identificacion  String   @unique
+  /// Identificación y trato directo del paciente.
+  nombres         String
+  /// Identificación y trato directo del paciente.
+  apellidos       String
+  /// Dato demográfico relevante para la atención médica.
+  fechaNacimiento DateTime
+  /// Dato demográfico básico requerido para la atención.
+  sexo            String
+  /// Contacto para confirmación y recordatorio de citas.
+  telefono        String
+  /// Contacto y notificaciones. Opcional: no todo paciente dispone de correo.
+  email           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  citas      Cita[]
+  consultas  Consulta[]
+
+  @@map("pacientes")
+}
+
+/// Logística de agendamiento de una cita médica.
+/// Clasificación: ORDINARIA. No contiene contenido clínico: el
+/// motivo, diagnóstico y tratamiento residen exclusivamente en Consulta.
+model Cita {
+  id         String     @id @default(uuid())
+  /// Relación con el paciente que agenda la cita.
+  pacienteId String
+  paciente   Paciente   @relation(fields: [pacienteId], references: [id])
+  /// Relación con el usuario (rol MEDICO) que atiende la cita.
+  medicoId   String
+  medico     Usuario    @relation("MedicoCitas", fields: [medicoId], references: [id])
+  /// Fecha y hora programadas para la cita.
+  fechaHora  DateTime
+  /// Estado dentro del ciclo de vida logístico de la cita.
+  estado     EstadoCita @default(PROGRAMADA)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  consulta Consulta?
+
+  @@map("citas")
+}
+
+/// [CLASIFICACIÓN: SENSIBLE — Art. 25 LOPDP, categoría especial de datos:
+/// datos relativos a la salud]
+///
+/// Todo el contenido clínico de la atención médica se almacena
+/// exclusivamente en este modelo, separado de la logística de Cita,
+/// para permitir controles de acceso y tratamiento diferenciados en
+/// pasos posteriores (cifrado, auditoría, consentimiento).
+model Consulta {
+  id         String   @id @default(uuid())
+  /// Relación 1:1 con la cita logística que originó esta consulta.
+  citaId     String   @unique
+  cita       Cita     @relation(fields: [citaId], references: [id])
+  /// Relación con el paciente titular de los datos clínicos.
+  pacienteId String
+  paciente   Paciente @relation(fields: [pacienteId], references: [id])
+  /// Relación con el usuario (rol MEDICO) autor de la consulta.
+  medicoId   String
+  medico     Usuario  @relation("MedicoConsultas", fields: [medicoId], references: [id])
+
+  /// SENSIBLE (Art. 25 LOPDP) — dato de salud: motivo de la consulta.
+  motivoConsulta String
+  /// SENSIBLE (Art. 25 LOPDP) — dato de salud: diagnóstico clínico.
+  diagnostico    String
+  /// SENSIBLE (Art. 25 LOPDP) — dato de salud: tratamiento prescrito.
+  tratamiento    String
+  /// SENSIBLE (Art. 25 LOPDP) — dato de salud: notas clínicas del médico.
+  notasClinicas  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("consultas")
+}
