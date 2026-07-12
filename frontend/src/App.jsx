@@ -1,27 +1,37 @@
-import { ShieldCheck } from 'lucide-react'
+import { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { LoginView } from './views/LoginView';
+import { PacientesView } from './views/PacientesView';
+import { CitasView } from './views/CitasView';
+import { Layout } from './components/Layout';
+
+const VISTAS = {
+  pacientes: PacientesView,
+  citas: CitasView,
+};
+
+function AppAutenticada() {
+  const [vistaActual, setVistaActual] = useState('pacientes');
+  const VistaActiva = VISTAS[vistaActual] ?? PacientesView;
+
+  return (
+    <Layout vistaActual={vistaActual} onCambiarVista={setVistaActual}>
+      <VistaActiva />
+    </Layout>
+  );
+}
+
+function Raiz() {
+  const { estaAutenticado } = useAuth();
+  return estaAutenticado ? <AppAutenticada /> : <LoginView />;
+}
 
 function App() {
   return (
-    <main
-      style={{
-        minHeight: '100svh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '0.75rem',
-        padding: '2rem',
-        textAlign: 'center',
-      }}
-    >
-      <ShieldCheck size={40} color="var(--accent)" strokeWidth={1.5} />
-      <h1>Piloto de Privacidad desde el Diseño</h1>
-      <p style={{ color: 'var(--text-muted)' }}>
-        Base de frontend lista. Las vistas del sistema de citas y
-        consultoría médica se construirán en pasos posteriores.
-      </p>
-    </main>
-  )
+    <AuthProvider>
+      <Raiz />
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;

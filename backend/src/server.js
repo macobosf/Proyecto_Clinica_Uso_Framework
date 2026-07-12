@@ -27,6 +27,13 @@ app.use('/api/citas', citasRoutes);
 app.use('/api/consultas', consultasRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 
+// Manejador de errores centralizado: evita filtrar detalles internos
+// (stack traces, mensajes de Prisma) en la respuesta al cliente.
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ mensaje: 'Error interno del servidor' });
+});
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {

@@ -1,7 +1,8 @@
 const { Router } = require('express');
 const authRequired = require('../middleware/authRequired');
 const requireRol = require('../middleware/requireRol');
-const placeholder = require('./placeholder');
+const asyncHandler = require('../utils/asyncHandler');
+const citasController = require('../controllers/citasController');
 
 const router = Router();
 
@@ -12,35 +13,43 @@ router.post(
   '/',
   authRequired,
   requireRol('RECEPCION'),
-  placeholder('Crear cita (pendiente de implementar)'),
+  asyncHandler(citasController.crear),
 );
 
 router.get(
   '/',
   authRequired,
   requireRol('RECEPCION', 'MEDICO', 'ADMINISTRACION'),
-  placeholder('Listar citas (pendiente de implementar)'),
+  asyncHandler(citasController.listar),
+);
+
+// Antes de '/:id': si no, Express interpretaría "medicos" como un :id.
+router.get(
+  '/medicos',
+  authRequired,
+  requireRol('RECEPCION', 'MEDICO', 'ADMINISTRACION'),
+  asyncHandler(citasController.listarMedicos),
 );
 
 router.get(
   '/:id',
   authRequired,
   requireRol('RECEPCION', 'MEDICO', 'ADMINISTRACION'),
-  placeholder('Obtener cita (pendiente de implementar)'),
+  asyncHandler(citasController.obtener),
 );
 
 router.put(
   '/:id',
   authRequired,
   requireRol('RECEPCION'),
-  placeholder('Editar cita (pendiente de implementar)'),
+  asyncHandler(citasController.editar),
 );
 
 router.patch(
-  '/:id/atendida',
+  '/:id/atender',
   authRequired,
   requireRol('MEDICO'),
-  placeholder('Marcar cita como atendida (pendiente de implementar)'),
+  asyncHandler(citasController.marcarAtendida),
 );
 
 module.exports = router;

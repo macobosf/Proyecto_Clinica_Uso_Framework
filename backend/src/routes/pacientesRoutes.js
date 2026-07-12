@@ -1,7 +1,8 @@
 const { Router } = require('express');
 const authRequired = require('../middleware/authRequired');
 const requireRol = require('../middleware/requireRol');
-const placeholder = require('./placeholder');
+const asyncHandler = require('../utils/asyncHandler');
+const pacientesController = require('../controllers/pacientesController');
 
 const router = Router();
 
@@ -11,28 +12,28 @@ router.post(
   '/',
   authRequired,
   requireRol('RECEPCION'),
-  placeholder('Crear paciente (pendiente de implementar)'),
+  asyncHandler(pacientesController.crear),
 );
 
 router.get(
   '/',
   authRequired,
   requireRol('RECEPCION', 'MEDICO', 'ADMINISTRACION'),
-  placeholder('Listar pacientes (pendiente de implementar)'),
+  asyncHandler(pacientesController.listar),
 );
 
 router.get(
   '/:id',
   authRequired,
   requireRol('RECEPCION', 'MEDICO', 'ADMINISTRACION'),
-  placeholder('Obtener paciente (pendiente de implementar)'),
+  asyncHandler(pacientesController.obtener),
 );
 
 router.put(
   '/:id',
   authRequired,
   requireRol('RECEPCION'),
-  placeholder('Editar paciente (pendiente de implementar)'),
+  asyncHandler(pacientesController.editar),
 );
 
 module.exports = router;
