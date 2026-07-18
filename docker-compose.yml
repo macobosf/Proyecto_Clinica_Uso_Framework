@@ -15,6 +15,25 @@ services:
       - "5544:5432"
     volumes:
       - piloto_pbd_db_data:/var/lib/postgresql/data
+      # Certificado autofirmado para cifrado en tránsito backend↔PostgreSQL
+      # (control DES-01). Montado de solo lectura; el entrypoint los copia a
+      # una ruta interna con el dueño/permisos que Postgres exige (0600,
+      # propiedad del usuario "postgres") antes de arrancar el servidor.
+      - ./backend/certs/postgres/servidor.crt:/certs-origen/servidor.crt:ro
+      - ./backend/certs/postgres/servidor.key:/certs-origen/servidor.key:ro
+    # Postgres rechaza el arranque con SSL si la clave privada es legible por
+    # otros usuarios o no pertenece al usuario "postgres"; como el archivo
+    # llega montado con el dueño del host, se copia y se ajustan permisos
+    # aquí antes de invocar el entrypoint original de la imagen.
+    entrypoint:
+      - sh
+      - -c
+      - |
+        cp /certs-origen/servidor.crt /var/lib/postgresql/servidor.crt && \
+        cp /certs-origen/servidor.key /var/lib/postgresql/servidor.key && \
+        chown postgres:postgres /var/lib/postgresql/servidor.crt /var/lib/postgresql/servidor.key && \
+        chmod 600 /var/lib/postgresql/servidor.key && \
+        exec docker-entrypoint.sh postgres -c ssl=on -c ssl_cert_file=/var/lib/postgresql/servidor.crt -c ssl_key_file=/var/lib/postgresql/servidor.key
 
 volumes:
   piloto_pbd_db_data:
