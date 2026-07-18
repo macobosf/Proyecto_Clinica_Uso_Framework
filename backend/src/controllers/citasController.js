@@ -1,4 +1,6 @@
 const prisma = require('../services/prismaClient');
+const { obtenerConsentimientoVigente } = require('./consentimientoController');
+const { registrarAuditoria } = require('../services/auditoria');
 
 // Nunca se seleccionan campos de Usuario más allá de estos: en particular,
 // jamás passwordHash (minimización también en las respuestas de la API).
@@ -31,6 +33,32 @@ async function crear(req, res) {
     return res.status(400).json({ mensaje: 'El paciente indicado no existe' });
   }
 
+  // Derecho de eliminación (Art. 15): un paciente dado de baja no puede ser
+  // agendado para nuevas citas.
+  if (!paciente.activo) {
+    return res.status(422).json({
+      mensaje: 'Este paciente fue dado de baja; no se pueden agendar nuevas citas para él',
+    });
+  }
+
+  // Derecho de oposición (Art. 16): mismo patrón que el bloqueo por
+  // consentimiento — el paciente se opuso al tratamiento de sus datos.
+  if (paciente.oposicionTratamiento) {
+    return res.status(422).json({
+      mensaje: 'El paciente se opuso al tratamiento de sus datos personales; no se pueden agendar nuevas citas',
+    });
+  }
+
+  // Control DIS-03 (Art. 7 LOPDP: consentimiento como base de licitud): sin
+  // un consentimiento vigente aceptado, no se agenda la cita. El estado
+  // vigente es siempre el registro más reciente del paciente.
+  const consentimiento = await obtenerConsentimientoVigente(pacienteId);
+  if (!consentimiento || !consentimiento.aceptado) {
+    return res.status(422).json({
+      mensaje: 'El paciente no cuenta con consentimiento informado vigente',
+    });
+  }
+
   const medico = await prisma.usuario.findUnique({ where: { id: medicoId } });
   if (!medico || medico.rol !== 'MEDICO') {
     return res.status(400).json({ mensaje: 'El médico indicado no existe o no tiene rol MEDICO' });
@@ -39,6 +67,14 @@ async function crear(req, res) {
   const cita = await prisma.cita.create({
     data: { pacienteId, medicoId, fechaHora: new Date(fechaHora) },
     select: CAMPOS_CITA,
+  });
+
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'CREAR',
+    entidad: 'Cita',
+    entidadId: cita.id,
+    req,
   });
 
   return res.status(201).json(cita);
@@ -61,6 +97,14 @@ async function obtener(req, res) {
   if (!cita) {
     return res.status(404).json({ mensaje: 'Cita no encontrada' });
   }
+
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'LEER',
+    entidad: 'Cita',
+    entidadId: cita.id,
+    req,
+  });
 
   return res.json(cita);
 }
@@ -104,6 +148,14 @@ async function editar(req, res) {
     select: CAMPOS_CITA,
   });
 
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'EDITAR',
+    entidad: 'Cita',
+    entidadId: cita.id,
+    req,
+  });
+
   return res.json(cita);
 }
 
@@ -122,6 +174,14 @@ async function marcarAtendida(req, res) {
     where: { id: req.params.id },
     data: { estado: 'ATENDIDA' },
     select: CAMPOS_CITA,
+  });
+
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'EDITAR',
+    entidad: 'Cita',
+    entidadId: cita.id,
+    req,
   });
 
   return res.json(cita);

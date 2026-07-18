@@ -49,8 +49,11 @@ model Usuario {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  citasComoMedico     Cita[]     @relation("MedicoCitas")
-  consultasComoMedico Consulta[] @relation("MedicoConsultas")
+  citasComoMedico         Cita[]                   @relation("MedicoCitas")
+  consultasComoMedico     Consulta[]               @relation("MedicoConsultas")
+  logsAuditoria           LogAuditoria[]
+  eventosSeguridad        EventoSeguridad[]
+  verificacionesPrivacidad VerificacionPrivacidad[]
 
   @@map("usuarios")
 }
@@ -74,11 +77,22 @@ model Paciente {
   telefono        String
   /// Contacto y notificaciones. Opcional: no todo paciente dispone de correo.
   email           String?
+  /// Baja lógica (derecho de eliminación, Art. 15 LOPDP): nunca se borra al
+  /// paciente ni sus Consultas físicamente, porque la historia clínica debe
+  /// conservarse por obligación legal. Un paciente inactivo no puede usar su
+  /// token ARCO+ ni ser agendado para nuevas citas.
+  activo               Boolean  @default(true)
+  /// Derecho de oposición (Art. 16 LOPDP): si el paciente se opone al
+  /// tratamiento de sus datos, no se pueden agendar nuevas citas y ya no
+  /// puede corregir sus datos ordinarios (sigue pudiendo consultarlos/
+  /// exportarlos, eso no es "tratamiento" adicional).
+  oposicionTratamiento Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  citas      Cita[]
-  consultas  Consulta[]
+  citas            Cita[]
+  consultas        Consulta[]
+  consentimientos  Consentimiento[]
 
   @@map("pacientes")
 }
@@ -138,4 +152,131 @@ model Consulta {
   updatedAt DateTime @updatedAt
 
   @@map("consultas")
+}
+
+/// Consentimiento informado del paciente para el tratamiento de sus datos
+/// (Art. 7 LOPDP: consentimiento como base de licitud). No contiene datos de
+/// salud en sí mismo (clasificación ORDINARIA), pero condiciona el
+/// tratamiento de los datos sensibles: sin un consentimiento vigente con
+/// aceptado = true, el sistema no permite agendar citas para el paciente.
+/// Cada registro es inmutable y con marca de tiempo propia; el "estado
+/// vigente" es siempre el registro más reciente por fechaHora, lo que
+/// preserva el historial completo de decisiones del paciente.
+model Consentimiento {
+  id         String   @id @default(uuid())
+  /// Paciente titular del consentimiento.
+  pacienteId String
+  paciente   Paciente @relation(fields: [pacienteId], references: [id])
+  /// Texto de la finalidad presentado al paciente en el momento de la decisión.
+  finalidad  String
+  /// true si aceptó el tratamiento de sus datos; false si lo rechazó.
+  aceptado   Boolean
+  /// Momento exacto en que se registró la decisión.
+  fechaHora  DateTime @default(now())
+  /// Versión del texto de consentimiento (permite versionar si cambia a futuro).
+  version    String
+
+  @@map("consentimientos")
+}
+
+/// Registro de auditoría: quién hizo qué, cuándo y sobre qué registro.
+/// Nunca contiene contenido clínico ni ningún otro dato personal en sí
+/// mismo — únicamente metadatos de la operación (Art. 10 LOPDP: seguridad
+/// y trazabilidad del tratamiento). Es intencionalmente un modelo aparte
+/// de Usuario/Paciente/Cita/Consulta: mezclar auditoría con los datos que
+/// audita dificultaría aplicar retención/acceso distintos a futuro.
+model LogAuditoria {
+  id         String   @id @default(uuid())
+  /// Quién ejecutó la acción (personal interno autenticado). Nulo cuando la
+  /// acción la origina el propio paciente vía el mecanismo ARCO+ (Art.
+  /// 13/14 LOPDP): no hay personal interno de por medio, y forzar un
+  /// usuario inventado falsearía la trazabilidad.
+  usuarioId  String?
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id])
+  /// CREAR / LEER / EDITAR / ELIMINAR.
+  accion     String
+  /// Paciente / Cita / Consulta / Consentimiento.
+  entidad    String
+  /// id del registro afectado (nunca su contenido).
+  entidadId  String
+  fechaHora  DateTime @default(now())
+  /// Dirección IP de origen de la petición. Opcional: puede no resolverse
+  /// en ciertos entornos (p. ej. detrás de un proxy sin configurar).
+  ip         String?
+
+  @@map("logs_auditoria")
+}
+
+/// Evento de seguridad detectado por el sistema (control DYM-01): anomalías
+/// y accesos no autorizados — distinto del log de auditoría, que registra
+/// operaciones CRUD legítimas ya autorizadas. Modelo APARTE de LogAuditoria
+/// a propósito: un evento de seguridad no siempre tiene una entidad/
+/// entidadId de negocio consistente (un login fallido no "afecta" ningún
+/// registro de Paciente/Cita/Consulta), y su usuarioId es opcional porque
+/// el intento puede no estar autenticado en absoluto. Mezclar ambos
+/// modelos hubiera forzado campos nulos/reinterpretados en todas partes.
+///
+/// NOTA DE ALCANCE: este modelo aporta la CAPACIDAD TÉCNICA de detección y
+/// registro de incidentes. La notificación de una brecha a la autoridad de
+/// control y al titular de los datos es un procedimiento organizativo del
+/// responsable del tratamiento, fuera del alcance de este software — el
+/// sistema solo provee la evidencia para activar ese procedimiento.
+model EventoSeguridad {
+  id          String   @id @default(uuid())
+  /// LOGIN_FALLIDO / ACCESO_DENEGADO / TOKEN_ARCO_INVALIDO / INTEGRIDAD_FALLIDA.
+  tipo        String
+  /// Breve y sin datos sensibles: nunca contraseñas ni contenido clínico
+  /// (puede incluir un email de intento de login o una ruta solicitada,
+  /// que son metadatos ordinarios, no datos de salud).
+  descripcion String
+  fechaHora   DateTime @default(now())
+  ip          String?
+  /// Quién, solo si se conoce y está autenticado. Null cuando el intento no
+  /// lo está (login fallido con email desconocido, token ARCO inválido).
+  usuarioId   String?
+  usuario     Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@map("eventos_seguridad")
+}
+
+/// Registro clínico anonimizado (control DYM-02: aplicación del plazo de
+/// conservación). Resultado de anonimizar una Consulta que superó su plazo
+/// de conservación (ver docs/politica-conservacion.md): conserva el
+/// contenido clínico agregado (aún cifrado) pero SIN ningún campo que
+/// permita reconstruir a qué paciente, médico o cita perteneció — la
+/// anonimización es irreversible a propósito. El registro original en
+/// Consulta se elimina al crear este.
+model ConsultaAnonimizada {
+  id             String   @id @default(uuid())
+  /// Año de la cita original: agregado estadístico, no identifica a nadie.
+  anioOriginal   Int
+  motivoConsulta String
+  diagnostico    String
+  tratamiento    String
+  notasClinicas  String
+  anonimizadaEn  DateTime @default(now())
+
+  @@map("consultas_anonimizadas")
+}
+
+/// Ejecución del chequeo de mantenimiento de las medidas de privacidad
+/// (control DYM-03): verifica en tiempo de ejecución que los controles ya
+/// implementados (cifrado en reposo, cifrado en tránsito, control de acceso
+/// por rol, consentimiento, auditoría) siguen operativos y no se degradaron
+/// silenciosamente tras un cambio o actualización del sistema. Modelo
+/// APARTE, siguiendo el mismo criterio que LogAuditoria/EventoSeguridad/
+/// ConsultaAnonimizada: esto no es una operación de negocio sobre un
+/// paciente/cita/consulta, sino un chequeo de salud del propio sistema.
+model VerificacionPrivacidad {
+  id              String   @id @default(uuid())
+  fechaHora       DateTime @default(now())
+  /// OK si las 5 medidas verificadas dieron OK; FALLO si al menos una falló.
+  resultadoGlobal String
+  /// Detalle por medida: [{ control, estado, descripcion }, ...].
+  detalle         Json
+  /// Quién disparó la verificación (siempre ADMINISTRACION).
+  usuarioId       String?
+  usuario         Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@map("verificaciones_privacidad")
 }

@@ -1,0 +1,31 @@
+.claude/
+
+# Dependencias
+node_modules/
+
+# Variables de entorno (secretos reales; los .env.example sí se versionan)
+.env
+.env.*
+!.env.example
+
+# Certificados autofirmados (se generan localmente, ver README)
+certs/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Builds
+dist/
+dist-ssr/
+build/
+
+# Editor / SO
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.local

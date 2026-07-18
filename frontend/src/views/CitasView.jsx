@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { CalendarPlus, CheckCircle2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { ConsentimientoAviso } from '../components/ConsentimientoAviso';
+import { TEXTO_CONSENTIMIENTO, VERSION_CONSENTIMIENTO } from '../utils/consentimiento';
 
 const FORMULARIO_VACIO = { pacienteId: '', medicoId: '', fechaHora: '' };
 
@@ -32,6 +34,13 @@ export function CitasView() {
   const [errorFormulario, setErrorFormulario] = useState('');
   const [idAtendiendo, setIdAtendiendo] = useState(null);
 
+  // Estado del consentimiento del paciente seleccionado en el formulario de
+  // agendamiento (control DIS-03). null = aún no se sabe / no aplica.
+  const [tieneConsentimientoVigente, setTieneConsentimientoVigente] = useState(null);
+  const [verificandoConsentimiento, setVerificandoConsentimiento] = useState(false);
+  // Nunca premarcado: cada selección de paciente reinicia este checkbox.
+  const [consentimientoAceptado, setConsentimientoAceptado] = useState(false);
+
   async function cargarCitas() {
     setCargando(true);
     setError('');
@@ -53,6 +62,8 @@ export function CitasView() {
   async function abrirFormulario() {
     setErrorFormulario('');
     setFormulario(FORMULARIO_VACIO);
+    setConsentimientoAceptado(false);
+    setTieneConsentimientoVigente(null);
     setFormularioVisible(true);
     try {
       const [listaPacientes, listaMedicos] = await Promise.all([
@@ -74,15 +85,47 @@ export function CitasView() {
     setFormulario((anterior) => ({ ...anterior, [campo]: valor }));
   }
 
+  async function seleccionarPaciente(pacienteId) {
+    actualizarCampo('pacienteId', pacienteId);
+    setConsentimientoAceptado(false);
+    setTieneConsentimientoVigente(null);
+
+    if (!pacienteId) return;
+
+    setVerificandoConsentimiento(true);
+    try {
+      const datos = await solicitar(`/api/pacientes/${pacienteId}/consentimiento`);
+      setTieneConsentimientoVigente(Boolean(datos.consentimiento?.aceptado));
+    } catch (err) {
+      setErrorFormulario(err.message || 'No se pudo verificar el consentimiento del paciente');
+    } finally {
+      setVerificandoConsentimiento(false);
+    }
+  }
+
   async function agendarCita() {
     if (!formulario.pacienteId || !formulario.medicoId || !formulario.fechaHora) {
       setErrorFormulario('Completa paciente, médico y fecha/hora');
       return;
     }
 
+    if (tieneConsentimientoVigente === false && !consentimientoAceptado) {
+      setErrorFormulario('Este paciente no tiene un consentimiento vigente: marca la aceptación para poder agendar');
+      return;
+    }
+
     setGuardando(true);
     setErrorFormulario('');
     try {
+      if (tieneConsentimientoVigente === false && consentimientoAceptado) {
+        // Se captura el consentimiento aquí mismo (control DIS-03), justo
+        // antes de agendar la primera cita del paciente.
+        await solicitar(`/api/pacientes/${formulario.pacienteId}/consentimiento`, {
+          method: 'POST',
+          body: { finalidad: TEXTO_CONSENTIMIENTO, aceptado: true, version: VERSION_CONSENTIMIENTO },
+        });
+      }
+
       await solicitar('/api/citas', {
         method: 'POST',
         body: { ...formulario, fechaHora: new Date(formulario.fechaHora).toISOString() },
@@ -136,7 +179,7 @@ export function CitasView() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.75rem' }}>
             <label className="campo">
               Paciente
-              <select value={formulario.pacienteId} onChange={(e) => actualizarCampo('pacienteId', e.target.value)}>
+              <select value={formulario.pacienteId} onChange={(e) => seleccionarPaciente(e.target.value)}>
                 <option value="">Selecciona…</option>
                 {pacientes.map((paciente) => (
                   <option key={paciente.id} value={paciente.id}>
@@ -168,13 +211,30 @@ export function CitasView() {
             </label>
           </div>
 
+          {verificandoConsentimiento && (
+            <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+              Verificando consentimiento del paciente…
+            </p>
+          )}
+
+          {tieneConsentimientoVigente === false && (
+            <div style={{ marginTop: '1rem' }}>
+              <ConsentimientoAviso aceptado={consentimientoAceptado} onCambiar={setConsentimientoAceptado} />
+            </div>
+          )}
+
           {errorFormulario && (
             <p className="mensaje-error" style={{ marginTop: '0.75rem' }}>
               {errorFormulario}
             </p>
           )}
 
-          <button className="boton" style={{ marginTop: '1rem' }} onClick={agendarCita} disabled={guardando}>
+          <button
+            className="boton"
+            style={{ marginTop: '1rem' }}
+            onClick={agendarCita}
+            disabled={guardando || verificandoConsentimiento || (tieneConsentimientoVigente === false && !consentimientoAceptado)}
+          >
             {guardando ? 'Agendando…' : 'Agendar'}
           </button>
         </div>

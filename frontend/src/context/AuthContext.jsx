@@ -1,8 +1,7 @@
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { API_URL } from '../api/config';
 
 const AuthContext = createContext(null);
-
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
 
 // Error tipado para que las vistas puedan distinguir 401/403 de otros fallos
 // sin tener que parsear mensajes de texto.

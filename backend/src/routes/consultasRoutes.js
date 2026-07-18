@@ -10,7 +10,7 @@ const router = Router();
 // Único recurso al que RECEPCION y ADMINISTRACION NO tienen acceso (403):
 // solo MEDICO trata el contenido clínico, aplicando mínimo privilegio.
 // Los cuatro campos clínicos se cifran/descifran de forma transparente en
-// el controlador (control IMP-01, ver src/services/crypto.js).
+// el controlador (control DES-01, ver src/services/crypto.js).
 router.post(
   '/',
   authRequired,

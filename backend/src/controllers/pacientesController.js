@@ -1,4 +1,5 @@
 const prisma = require('../services/prismaClient');
+const { registrarAuditoria } = require('../services/auditoria');
 
 // Datos ORDINARIOS: no hay contenido clínico en este modelo (ver Consulta).
 const CAMPOS_PACIENTE = {
@@ -10,6 +11,9 @@ const CAMPOS_PACIENTE = {
   sexo: true,
   telefono: true,
   email: true,
+  // Derecho de eliminación (Art. 15 LOPDP): el personal debe ver claramente
+  // si un paciente fue dado de baja (no puede agendársele nuevas citas).
+  activo: true,
   createdAt: true,
   updatedAt: true,
 };
@@ -40,6 +44,13 @@ async function crear(req, res) {
       },
       select: CAMPOS_PACIENTE,
     });
+    await registrarAuditoria({
+      usuarioId: req.usuario.id,
+      accion: 'CREAR',
+      entidad: 'Paciente',
+      entidadId: paciente.id,
+      req,
+    });
     return res.status(201).json(paciente);
   } catch (error) {
     if (error.code === 'P2002') {
@@ -67,6 +78,14 @@ async function obtener(req, res) {
     return res.status(404).json({ mensaje: 'Paciente no encontrado' });
   }
 
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'LEER',
+    entidad: 'Paciente',
+    entidadId: paciente.id,
+    req,
+  });
+
   return res.json(paciente);
 }
 
@@ -93,6 +112,13 @@ async function editar(req, res) {
         ...(email !== undefined && { email }),
       },
       select: CAMPOS_PACIENTE,
+    });
+    await registrarAuditoria({
+      usuarioId: req.usuario.id,
+      accion: 'EDITAR',
+      entidad: 'Paciente',
+      entidadId: paciente.id,
+      req,
     });
     return res.json(paciente);
   } catch (error) {

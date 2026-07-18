@@ -84,6 +84,13 @@ export function LoginView() {
             <LogIn size={18} />
             {enviando ? 'Ingresando…' : 'Ingresar'}
           </button>
+
+          <a
+            href="/privacidad"
+            style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)' }}
+          >
+            Aviso de privacidad
+          </a>
         </div>
       </div>
     </main>

@@ -1,5 +1,7 @@
 const prisma = require('../services/prismaClient');
 const { cifrar, descifrar } = require('../services/crypto');
+const { registrarAuditoria } = require('../services/auditoria');
+const { registrarEventoSeguridad } = require('../services/seguridad');
 
 // Nunca se seleccionan campos de Usuario más allá de estos (nunca passwordHash).
 const CAMPOS_MEDICO_RESUMEN = { id: true, nombres: true };
@@ -23,7 +25,7 @@ const CAMPOS_CONSULTA = {
 const CAMPOS_CLINICOS = ['motivoConsulta', 'diagnostico', 'tratamiento', 'notasClinicas'];
 
 // Cifra los cuatro campos clínicos antes de persistir. Nunca se escribe
-// texto plano en disco (Art. 25 LOPDP, control IMP-01).
+// texto plano en disco (Art. 25 LOPDP, control DES-01).
 function cifrarCamposClinicos(datos) {
   const resultado = {};
   for (const campo of CAMPOS_CLINICOS) {
@@ -44,6 +46,25 @@ function descifrarConsulta(consulta) {
     tratamiento: descifrar(consulta.tratamiento),
     notasClinicas: descifrar(consulta.notasClinicas),
   };
+}
+
+// Envoltorio de detección (control DYM-01): si el descifrado falla (clave
+// incorrecta o dato manipulado — ver services/crypto.js), registra el
+// incidente antes de dejar que el error siga su curso normal (manejador de
+// errores centralizado en server.js, 500 genérico al cliente). Nunca
+// incluye contenido clínico, solo el id de la consulta afectada.
+async function descifrarConsultaSegura(consulta, req) {
+  try {
+    return descifrarConsulta(consulta);
+  } catch (error) {
+    await registrarEventoSeguridad({
+      tipo: 'INTEGRIDAD_FALLIDA',
+      descripcion: `Fallo de integridad al descifrar la consulta ${consulta.id}`,
+      usuarioId: req.usuario?.id ?? null,
+      req,
+    });
+    throw error;
+  }
 }
 
 async function crear(req, res) {
@@ -68,7 +89,17 @@ async function crear(req, res) {
       },
       select: CAMPOS_CONSULTA,
     });
-    return res.status(201).json(descifrarConsulta(consulta));
+    // REGLA CRÍTICA: solo se pasa el id de la consulta, jamás los campos
+    // clínicos (ni en claro ni cifrados) — el log de auditoría es metadato
+    // puro, nunca contenido de salud.
+    await registrarAuditoria({
+      usuarioId: req.usuario.id,
+      accion: 'CREAR',
+      entidad: 'Consulta',
+      entidadId: consulta.id,
+      req,
+    });
+    return res.status(201).json(await descifrarConsultaSegura(consulta, req));
   } catch (error) {
     if (error.code === 'P2002') {
       return res.status(409).json({ mensaje: 'Esta cita ya tiene una consulta registrada' });
@@ -82,7 +113,8 @@ async function listar(req, res) {
     select: CAMPOS_CONSULTA,
     orderBy: { createdAt: 'desc' },
   });
-  return res.json(consultas.map(descifrarConsulta));
+  const descifradas = await Promise.all(consultas.map((consulta) => descifrarConsultaSegura(consulta, req)));
+  return res.json(descifradas);
 }
 
 async function obtener(req, res) {
@@ -95,7 +127,17 @@ async function obtener(req, res) {
     return res.status(404).json({ mensaje: 'Consulta no encontrada' });
   }
 
-  return res.json(descifrarConsulta(consulta));
+  // Punto más sensible del sistema: queda constancia de que este MEDICO
+  // accedió a este registro clínico específico (id), nunca a su contenido.
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'LEER',
+    entidad: 'Consulta',
+    entidadId: consulta.id,
+    req,
+  });
+
+  return res.json(await descifrarConsultaSegura(consulta, req));
 }
 
 async function editar(req, res) {
@@ -113,7 +155,15 @@ async function editar(req, res) {
     select: CAMPOS_CONSULTA,
   });
 
-  return res.json(descifrarConsulta(consulta));
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'EDITAR',
+    entidad: 'Consulta',
+    entidadId: consulta.id,
+    req,
+  });
+
+  return res.json(await descifrarConsultaSegura(consulta, req));
 }
 
 module.exports = { crear, listar, obtener, editar };

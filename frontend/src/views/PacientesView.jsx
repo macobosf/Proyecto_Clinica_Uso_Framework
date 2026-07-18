@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Plus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { ConsentimientoAviso } from '../components/ConsentimientoAviso';
+import { TEXTO_CONSENTIMIENTO, VERSION_CONSENTIMIENTO } from '../utils/consentimiento';
 
 const FORMULARIO_VACIO = {
   identificacion: '',
@@ -29,6 +31,8 @@ export function PacientesView() {
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
   const [guardando, setGuardando] = useState(false);
   const [errorFormulario, setErrorFormulario] = useState('');
+  // Nunca premarcado: cada apertura del formulario de alta arranca en false.
+  const [consentimientoAceptado, setConsentimientoAceptado] = useState(false);
 
   async function cargarPacientes() {
     setCargando(true);
@@ -52,6 +56,7 @@ export function PacientesView() {
     setEditandoId(null);
     setFormulario(FORMULARIO_VACIO);
     setErrorFormulario('');
+    setConsentimientoAceptado(false);
     setFormularioVisible(true);
   }
 
@@ -86,7 +91,20 @@ export function PacientesView() {
       if (editandoId) {
         await solicitar(`/api/pacientes/${editandoId}`, { method: 'PUT', body: formulario });
       } else {
-        await solicitar('/api/pacientes', { method: 'POST', body: formulario });
+        const pacienteCreado = await solicitar('/api/pacientes', { method: 'POST', body: formulario });
+        // Consentimiento informado (control DIS-03): se registra la decisión
+        // tomada en el momento del registro, sea aceptación o rechazo — el
+        // checkbox nunca llega premarcado, así que refleja una elección
+        // explícita de quien atiende al paciente. El bloqueo real para
+        // agendar citas ocurre después, en CitasView / backend.
+        await solicitar(`/api/pacientes/${pacienteCreado.id}/consentimiento`, {
+          method: 'POST',
+          body: {
+            finalidad: TEXTO_CONSENTIMIENTO,
+            aceptado: consentimientoAceptado,
+            version: VERSION_CONSENTIMIENTO,
+          },
+        });
       }
       cerrarFormulario();
       await cargarPacientes();
@@ -169,6 +187,12 @@ export function PacientesView() {
             </label>
           </div>
 
+          {!editandoId && (
+            <div style={{ marginTop: '1rem' }}>
+              <ConsentimientoAviso aceptado={consentimientoAceptado} onCambiar={setConsentimientoAceptado} />
+            </div>
+          )}
+
           {errorFormulario && (
             <p className="mensaje-error" style={{ marginTop: '0.75rem' }}>
               {errorFormulario}
@@ -197,6 +221,7 @@ export function PacientesView() {
                 <th>Sexo</th>
                 <th>Teléfono</th>
                 <th>Email</th>
+                <th>Estado</th>
                 {puedeGestionar && <th></th>}
               </tr>
             </thead>
@@ -210,6 +235,11 @@ export function PacientesView() {
                   <td>{paciente.sexo}</td>
                   <td>{paciente.telefono}</td>
                   <td>{paciente.email || '—'}</td>
+                  <td>
+                    <span className={`etiqueta-estado ${paciente.activo ? 'atendida' : 'cancelada'}`}>
+                      {paciente.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
                   {puedeGestionar && (
                     <td>
                       <button className="boton boton-secundario" onClick={() => abrirFormularioEdicion(paciente)}>

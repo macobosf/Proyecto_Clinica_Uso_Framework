@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const prisma = require('../services/prismaClient');
+const { registrarEventoSeguridad } = require('../services/seguridad');
 
 const MENSAJE_CREDENCIALES_INVALIDAS = 'Credenciales inválidas';
 
@@ -14,6 +15,11 @@ async function login(req, res) {
   const { email, password } = req.body ?? {};
 
   if (!email || !password) {
+    await registrarEventoSeguridad({
+      tipo: 'LOGIN_FALLIDO',
+      descripcion: 'Intento de inicio de sesión sin email o contraseña',
+      req,
+    });
     return res.status(401).json({ mensaje: MENSAJE_CREDENCIALES_INVALIDAS });
   }
 
@@ -22,6 +28,15 @@ async function login(req, res) {
   const passwordValido = await bcrypt.compare(password, hashParaComparar);
 
   if (!usuario || !usuario.activo || !passwordValido) {
+    // usuarioId solo si el email corresponde a una cuenta real: permite
+    // detectar intentos dirigidos contra una cuenta específica (fuerza
+    // bruta) sin afectar el mensaje genérico que ve el cliente.
+    await registrarEventoSeguridad({
+      tipo: 'LOGIN_FALLIDO',
+      descripcion: `Intento de inicio de sesión fallido para ${email}`,
+      usuarioId: usuario?.id ?? null,
+      req,
+    });
     return res.status(401).json({ mensaje: MENSAJE_CREDENCIALES_INVALIDAS });
   }
 

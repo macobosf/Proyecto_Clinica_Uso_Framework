@@ -1,5 +1,5 @@
 // Cifrado a nivel de campo para los datos de salud del modelo Consulta
-// (Art. 25 LOPDP, control IMP-01). AES-256-GCM con el módulo nativo 'crypto'
+// (Art. 25 LOPDP, control DES-01). AES-256-GCM con el módulo nativo 'crypto'
 // de Node — sin dependencias externas.
 //
 // Cada valor cifrado guarda su propio IV (único por operación, nunca
