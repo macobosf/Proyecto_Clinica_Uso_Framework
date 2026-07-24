@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pencil, Plus, X } from 'lucide-react';
+import { Check, Copy, Pencil, Plus, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ConsentimientoAviso } from '../components/ConsentimientoAviso';
 import { TEXTO_CONSENTIMIENTO, VERSION_CONSENTIMIENTO } from '../utils/consentimiento';
@@ -33,6 +33,10 @@ export function PacientesView() {
   const [errorFormulario, setErrorFormulario] = useState('');
   // Nunca premarcado: cada apertura del formulario de alta arranca en false.
   const [consentimientoAceptado, setConsentimientoAceptado] = useState(false);
+
+  // Enlace ARCO+ del último paciente registrado, para entregárselo (control DES-03).
+  const [enlaceArco, setEnlaceArco] = useState(null);
+  const [enlaceCopiado, setEnlaceCopiado] = useState(false);
 
   async function cargarPacientes() {
     setCargando(true);
@@ -97,13 +101,19 @@ export function PacientesView() {
         // checkbox nunca llega premarcado, así que refleja una elección
         // explícita de quien atiende al paciente. El bloqueo real para
         // agendar citas ocurre después, en CitasView / backend.
-        await solicitar(`/api/pacientes/${pacienteCreado.id}/consentimiento`, {
+        const consentimiento = await solicitar(`/api/pacientes/${pacienteCreado.id}/consentimiento`, {
           method: 'POST',
           body: {
             finalidad: TEXTO_CONSENTIMIENTO,
             aceptado: consentimientoAceptado,
             version: VERSION_CONSENTIMIENTO,
           },
+        });
+        // El paciente ejerce sus derechos ARCO+ por este enlace, sin cuenta de personal (DES-03).
+        setEnlaceCopiado(false);
+        setEnlaceArco({
+          nombre: `${pacienteCreado.nombres} ${pacienteCreado.apellidos}`,
+          url: `${window.location.origin}/arco/${consentimiento.tokenArco}`,
         });
       }
       cerrarFormulario();
@@ -128,6 +138,47 @@ export function PacientesView() {
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
+
+      {enlaceArco && (
+        <div className="tarjeta" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <strong>Enlace ARCO+ para {enlaceArco.nombre}</strong>
+            <button className="boton boton-secundario" onClick={() => setEnlaceArco(null)}>
+              <X size={16} />
+              Cerrar
+            </button>
+          </div>
+          <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+            Entrégale este enlace al paciente: le permite acceder, corregir, oponerse o eliminar sus
+            datos sin necesitar una cuenta de personal.
+          </p>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <input
+              readOnly
+              value={enlaceArco.url}
+              onFocus={(e) => e.target.select()}
+              style={{
+                flex: 1,
+                padding: '0.5rem 0.65rem',
+                border: '1px solid var(--border)',
+                borderRadius: '0.375rem',
+                background: 'var(--surface)',
+                color: 'var(--text)',
+              }}
+            />
+            <button
+              className="boton"
+              onClick={async () => {
+                await navigator.clipboard.writeText(enlaceArco.url);
+                setEnlaceCopiado(true);
+              }}
+            >
+              {enlaceCopiado ? <Check size={16} /> : <Copy size={16} />}
+              {enlaceCopiado ? 'Copiado' : 'Copiar'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {formularioVisible && (
         <div className="tarjeta">

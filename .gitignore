@@ -11,6 +11,9 @@ node_modules/
 # Certificados autofirmados (se generan localmente, ver README)
 certs/
 
+# Notas locales con credenciales de demo (no se versionan)
+credenciales-demo.txt
+
 # Logs
 *.log
 npm-debug.log*
