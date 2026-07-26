@@ -1,4 +1,4 @@
-# Matriz de acceso por roles — Piloto PbD (LOPDP Ecuador)
+# Matriz de acceso por roles — Aplicación PbD (LOPDP Ecuador)
 
 [⬅ Volver al README](../README.md)
 

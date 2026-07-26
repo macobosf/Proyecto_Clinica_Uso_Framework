@@ -1,4 +1,4 @@
-# Base de datos del piloto
+# Base de datos de la aplicación
 
 [⬅ Volver al README](../README.md)
 
@@ -19,7 +19,7 @@ Esta máquina también tiene otros contenedores Postgres de proyectos ajenos
 apuntar a un puerto distinto de 5544, las migraciones y el seed de Prisma
 pueden terminar aplicándose sobre la base de datos equivocada. Esto ya
 ocurrió una vez durante el desarrollo: se corrigió, pero quedó como
-recordatorio de usar siempre el puerto canónico 5544 para este piloto.
+recordatorio de usar siempre el puerto canónico 5544 para esta aplicación.
 
 Antes de correr `prisma migrate` o `prisma db seed`, verifica:
 
@@ -31,5 +31,5 @@ y confirma que el mapeo de puertos mostrado sea `0.0.0.0:5544->5432/tcp`.
 
 ## Documentación relacionada
 
-- [⬅ README principal](../README.md) — puesta en marcha del piloto.
+- [⬅ README principal](../README.md) — puesta en marcha de la aplicación.
 - [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — control DES-01 (cifrado en tránsito API↔PostgreSQL vía SSL).

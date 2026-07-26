@@ -1,6 +1,6 @@
-# Piloto PbD — Sistema de citas y consultoría médica
+# Aplicación PbD — Sistema de citas y consultoría médica
 
-Piloto de tesis: Framework de Privacidad desde el Diseño (PbD) en el Ciclo de Vida de
+Aplicación de tesis: Framework de Privacidad desde el Diseño (PbD) en el Ciclo de Vida de
 Desarrollo de Software (SDLC), conforme a la LOPDP del Ecuador. Backend en
 Node + Express + Prisma + PostgreSQL, frontend en React + Vite. Gestor de paquetes: pnpm.
 
@@ -39,7 +39,7 @@ debe responder `on`.
 ## Cifrado en tránsito (control DES-01)
 
 DES-01 exige cifrado tanto en reposo (campos clínicos, AES-256-GCM) como **en
-tránsito**. Este piloto cifra en tránsito los dos flujos de datos personales
+tránsito**. Esta aplicación cifra en tránsito los dos flujos de datos personales
 que existen en el sistema:
 
 1. **Navegador ↔ API** (HTTPS): el backend Express sirve exclusivamente por
@@ -57,14 +57,14 @@ para este entorno de demostración local — ninguno se sube al repositorio
 
 ```bash
 openssl req -x509 -newkey rsa:2048 -keyout clave.pem -out certificado.pem -days 365 -nodes \
-  -subj "/C=EC/ST=Azuay/L=Cuenca/O=Piloto PbD Tesis/OU=Demostracion/CN=localhost"
+  -subj "/C=EC/ST=Azuay/L=Cuenca/O=Aplicacion PbD Tesis/OU=Demostracion/CN=localhost"
 ```
 
 ### PostgreSQL (TLS)
 
 ```bash
 openssl req -x509 -newkey rsa:2048 -keyout servidor.key -out servidor.crt -days 365 -nodes \
-  -subj "/C=EC/ST=Azuay/L=Cuenca/O=Piloto PbD Tesis/OU=Demostracion/CN=piloto-pbd-db"
+  -subj "/C=EC/ST=Azuay/L=Cuenca/O=Aplicacion PbD Tesis/OU=Demostracion/CN=piloto-pbd-db"
 ```
 
 `docker-compose.yml` monta estos archivos de solo lectura y, en el
@@ -85,14 +85,14 @@ servidor de base de datos, no solo cifrar el canal.
 
 Por ser autofirmados, herramientas como `curl` requieren `-k`/`--insecure` y
 los navegadores mostrarán una advertencia de certificado no confiable al
-probar el piloto localmente — es el comportamiento esperado en este entorno
+probar la aplicación localmente — es el comportamiento esperado en este entorno
 de demo.
 
 ## Documentación relacionada
 
 ### Técnica
 
-- [docs/base-de-datos.md](docs/base-de-datos.md) — configuración de PostgreSQL del piloto.
+- [docs/base-de-datos.md](docs/base-de-datos.md) — configuración de PostgreSQL de la aplicación.
 - [docs/inventario-datos.md](docs/inventario-datos.md) — inventario y clasificación de datos.
 - [docs/matriz-acceso-roles.md](docs/matriz-acceso-roles.md) — matriz de acceso por rol.
 - [docs/politica-conservacion.md](docs/politica-conservacion.md) — plazos de conservación y eliminación segura.

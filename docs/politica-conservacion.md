@@ -29,8 +29,8 @@ esa revisión.
 |---|---|---|---|
 | **Cita** (logística: fecha, estado, médico asignado) | 2 años tras la fecha de la cita | `RETENCION_CITAS_DIAS` (730) | **Eliminación física** — solo si la cita ya no tiene una Consulta asociada (si la tiene, su ciclo de vida queda atado al de la Consulta; ver más abajo) |
 | **Consulta** (contenido clínico: motivo, diagnóstico, tratamiento, notas) | 10 años tras la fecha de la cita que originó la consulta | `RETENCION_CONSULTAS_DIAS` (3650) | **Anonimización** — se conserva el contenido clínico agregado (aún cifrado) en un registro aparte sin ningún vínculo a paciente/médico/cita; el original se elimina |
-| **Consentimiento** | Mientras exista la obligación de demostrar que el tratamiento tuvo base de licitud | — (sin vencimiento automático en este piloto) | No se implementa eliminación automática en DYM-02; es responsabilidad organizativa evaluar cuándo cesa esa obligación |
-| **Logs de auditoría / eventos de seguridad** | Mientras exista la obligación de demostrar cumplimiento y trazabilidad | — (sin vencimiento automático en este piloto) | Igual que Consentimiento: fuera de alcance de DYM-02, queda como criterio organizativo a definir |
+| **Consentimiento** | Mientras exista la obligación de demostrar que el tratamiento tuvo base de licitud | — (sin vencimiento automático en esta aplicación) | No se implementa eliminación automática en DYM-02; es responsabilidad organizativa evaluar cuándo cesa esa obligación |
+| **Logs de auditoría / eventos de seguridad** | Mientras exista la obligación de demostrar cumplimiento y trazabilidad | — (sin vencimiento automático en esta aplicación) | Igual que Consentimiento: fuera de alcance de DYM-02, queda como criterio organizativo a definir |
 
 ## Por qué Consulta se ancla a la fecha de la Cita, no a su propia `createdAt`
 

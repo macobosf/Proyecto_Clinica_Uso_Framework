@@ -3,12 +3,12 @@
 ## Bitácora de validación empírica del Framework PbD–SDLC–LOPDP
 
 **Tesis:** Diseño, implementación y validación de un Framework de Privacidad desde el Diseño (PbD) en el Ciclo de Vida de Desarrollo de Software (SDLC) conforme a la LOPDP del Ecuador.
-**Objetivo específico:** OE4 — Implementación piloto (sistema de citas y consultoría médica).
+**Objetivo específico:** OE4 — Implementación de la aplicación (sistema de citas y consultoría médica).
 **Fase:** Pruebas (PRU) — consolidación de las pruebas de verificación ya ejecutadas sobre los controles de Diseño y Desarrollo, organizadas en 3 casos de prueba (PRU-01, PRU-02, PRU-03) conforme a la fase de Pruebas del framework.
 
 [⬅ Volver al README](../README.md) &nbsp;·&nbsp; [Bitácora de evidencias OE4](registro-evidencias-OE4.md)
 
-> Este documento no introduce controles nuevos ni código nuevo: consolida, en formato de evidencia trazable, pruebas que ya se ejecutaron y verificaron durante el desarrollo del piloto (ver [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) para las fichas completas de cada control).
+> Este documento no introduce controles nuevos ni código nuevo: consolida, en formato de evidencia trazable, pruebas que ya se ejecutaron y verificaron durante el desarrollo de la aplicación (ver [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) para las fichas completas de cada control).
 
 ---
 

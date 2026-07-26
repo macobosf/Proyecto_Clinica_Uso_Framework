@@ -1,4 +1,4 @@
-# Inventario de datos — Piloto PbD (LOPDP Ecuador)
+# Inventario de datos — Aplicación PbD (LOPDP Ecuador)
 
 [⬅ Volver al README](../README.md)
 
@@ -66,14 +66,14 @@ atender citas médicas:
   y `email`.
 - **Estado civil, ocupación, nivel educativo del paciente**: son datos
   demográficos sin relación directa con la logística de citas o la atención
-  médica en este piloto.
-- **Número de contacto de emergencia**: no forma parte del alcance de este
-  piloto (gestión de citas y consultas); se evaluará en una fase posterior
+  médica en esta aplicación.
+- **Número de contacto de emergencia**: no forma parte del alcance de esta
+  aplicación (gestión de citas y consultas); se evaluará en una fase posterior
   si una finalidad concreta lo justifica.
 - **Fotografía del paciente**: no es necesaria para identificar al paciente,
   ya que `identificacion` (cédula) cumple esa finalidad de forma unívoca.
 - **Historial de aseguradora / datos de facturación**: fuera del alcance de
-  este piloto; de incorporarse en el futuro, deberá evaluarse como un dato
+  esta aplicación; de incorporarse en el futuro, deberá evaluarse como un dato
   ordinario independiente, con su propia finalidad y base de licitud.
 
 Todo campo no incluido en la tabla anterior fue descartado por no poder

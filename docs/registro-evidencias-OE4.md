@@ -4,7 +4,7 @@
 
 **Tesis:** Diseño, implementación y validación de un Framework de Privacidad desde el Diseño (PbD) en el Ciclo de Vida de Desarrollo de Software (SDLC) conforme a la LOPDP del Ecuador.
 **Autor:** Marco Antonio Cobos Farfán — Universidad Politécnica Salesiana, Sede Cuenca — 2026
-**Objetivo específico:** OE4 — Implementación piloto (sistema de citas y consultoría médica).
+**Objetivo específico:** OE4 — Implementación de la aplicación (sistema de citas y consultoría médica).
 
 [⬅ Volver al README](../README.md) &nbsp;·&nbsp; Ver también: [Pruebas OE4](pruebas-OE4.md) &nbsp;·&nbsp; [Capturas de evidencia](evidencias/OE4/)
 
@@ -12,7 +12,7 @@
 
 ### Propósito de este documento
 
-Este registro constituye la capa de validación empírica del framework diseñado en OE3. Por cada control que el piloto demuestra, documenta el artefacto verificable producido, la métrica instanciada con datos reales del piloto y el nivel de madurez alcanzado. En términos de Design Science Research, el piloto es la actividad de Demostración y las métricas alimentan la Evaluación del artefacto.
+Este registro constituye la capa de validación empírica del framework diseñado en OE3. Por cada control que la aplicación demuestra, documenta el artefacto verificable producido, la métrica instanciada con datos reales de la aplicación y el nivel de madurez alcanzado. En términos de Design Science Research, la aplicación es la actividad de Demostración y las métricas alimentan la Evaluación del artefacto.
 
 > Este documento es material de trabajo interno, no un capítulo de la tesis. De él se derivan la prosa de cada fase (que va al cuerpo del capítulo OE4) y las tablas/capturas de evidencia (que van como figuras numeradas). La bitácora en sí no se entrega.
 
@@ -20,7 +20,7 @@ Este registro constituye la capa de validación empírica del framework diseñad
 
 ### Alcance
 
-Los controles de la fase de Planificación (PLA) y ANA-03 son de naturaleza organizativa/documental; se evidencian mediante los artefactos que el piloto produce (RAT, DRP, MRP, informe de necesidad de EIPD). Los controles de Análisis, Diseño, Desarrollo y Despliegue y Mantenimiento se evidencian mediante la implementación del software y sus capturas.
+Los controles de la fase de Planificación (PLA) y ANA-03 son de naturaleza organizativa/documental; se evidencian mediante los artefactos que la aplicación produce (RAT, DRP, MRP, informe de necesidad de EIPD). Los controles de Análisis, Diseño, Desarrollo y Despliegue y Mantenimiento se evidencian mediante la implementación del software y sus capturas.
 
 ---
 
@@ -33,7 +33,7 @@ Los controles de la fase de Planificación (PLA) y ANA-03 son de naturaleza orga
 | Gestionado | 51–75 % | Implementado y medido |
 | Optimizado | 76–100 % | Implementado, medido y verificado |
 
-> Nota: donde aparece [CONFIRMAR] el valor de la métrica debe verificarse contra el conteo real del piloto antes del cierre definitivo. Las fórmulas provienen de la anatomía de cada control en OE3.
+> Nota: donde aparece [CONFIRMAR] el valor de la métrica debe verificarse contra el conteo real de la aplicación antes del cierre definitivo. Las fórmulas provienen de la anatomía de cada control en OE3.
 
 ---
 
@@ -334,14 +334,14 @@ Los controles de la fase de Planificación (PLA) y ANA-03 son de naturaleza orga
 
 ---
 
-*Registro consolidado de los 21 controles. Pendiente: confirmar los valores marcados [CONFIRMAR] contra el conteo real del piloto, y completar las capturas marcadas. En OE5 se consolida contra la matriz de trazabilidad como evidencia de Demostración y Evaluación (DSR).*
+*Registro consolidado de los 21 controles. Pendiente: confirmar los valores marcados [CONFIRMAR] contra el conteo real de la aplicación, y completar las capturas marcadas. En OE5 se consolida contra la matriz de trazabilidad como evidencia de Demostración y Evaluación (DSR).*
 
 ## Documentación relacionada
 
-- [⬅ README principal](../README.md) — puesta en marcha del piloto y cifrado en tránsito (DES-01).
+- [⬅ README principal](../README.md) — puesta en marcha de la aplicación y cifrado en tránsito (DES-01).
 - [docs/pruebas-OE4.md](pruebas-OE4.md) — casos de prueba (PRU-01/02/03) que verifican los controles de Diseño y Desarrollo de esta bitácora.
 - [docs/inventario-datos.md](inventario-datos.md) — inventario y clasificación de datos (ANA-01/ANA-02).
 - [docs/matriz-acceso-roles.md](matriz-acceso-roles.md) — matriz de acceso por rol (DES-02).
 - [docs/politica-conservacion.md](politica-conservacion.md) — plazos de conservación y eliminación segura (DYM-02).
-- [docs/base-de-datos.md](base-de-datos.md) — configuración de PostgreSQL del piloto.
+- [docs/base-de-datos.md](base-de-datos.md) — configuración de PostgreSQL de la aplicación.
 - [docs/evidencias/OE4/](evidencias/OE4/) — todas las capturas de evidencia, organizadas por control.
