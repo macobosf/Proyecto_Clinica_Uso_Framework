@@ -1,5 +1,7 @@
 # Base de datos del piloto
 
+[⬅ Volver al README](../README.md)
+
 Este proyecto usa **exclusivamente el puerto 5544** para su base de datos
 PostgreSQL, a través del contenedor `piloto-pbd-db` definido en
 [`docker-compose.yml`](../docker-compose.yml) (raíz del repositorio).
@@ -26,3 +28,8 @@ docker ps --filter "name=piloto-pbd-db"
 ```
 
 y confirma que el mapeo de puertos mostrado sea `0.0.0.0:5544->5432/tcp`.
+
+## Documentación relacionada
+
+- [⬅ README principal](../README.md) — puesta en marcha del piloto.
+- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — control DES-01 (cifrado en tránsito API↔PostgreSQL vía SSL).

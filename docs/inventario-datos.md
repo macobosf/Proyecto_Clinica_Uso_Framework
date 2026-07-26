@@ -1,9 +1,11 @@
 # Inventario de datos — Piloto PbD (LOPDP Ecuador)
 
+[⬅ Volver al README](../README.md)
+
 Este inventario documenta cada campo del modelo de datos, su finalidad concreta,
 su clasificación (Ordinaria / Sensible) y el artículo de la LOPDP que sustenta
 dicha clasificación. Corresponde al esquema definido en
-`backend/prisma/schema.prisma`.
+[`backend/prisma/schema.prisma`](../backend/prisma/schema.prisma).
 
 ## Tabla de inventario
 
@@ -77,3 +79,9 @@ atender citas médicas:
 Todo campo no incluido en la tabla anterior fue descartado por no poder
 justificarse frente a una finalidad concreta de agendamiento o atención de
 citas médicas.
+
+## Documentación relacionada
+
+- [⬅ README principal](../README.md)
+- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — controles ANA-01 (minimización) y ANA-02 (clasificación) que se validan con este inventario.
+- [docs/matriz-acceso-roles.md](matriz-acceso-roles.md) — quién puede acceder a cada uno de estos datos.

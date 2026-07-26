@@ -90,6 +90,17 @@ de demo.
 
 ## Documentación relacionada
 
+### Técnica
+
+- [docs/base-de-datos.md](docs/base-de-datos.md) — configuración de PostgreSQL del piloto.
 - [docs/inventario-datos.md](docs/inventario-datos.md) — inventario y clasificación de datos.
 - [docs/matriz-acceso-roles.md](docs/matriz-acceso-roles.md) — matriz de acceso por rol.
-- [docs/base-de-datos.md](docs/base-de-datos.md) — configuración de PostgreSQL del piloto.
+- [docs/politica-conservacion.md](docs/politica-conservacion.md) — plazos de conservación y eliminación segura.
+
+### Bitácora de validación — OE4 (tesis)
+
+- [docs/registro-evidencias-OE4.md](docs/registro-evidencias-OE4.md) — bitácora central: fichas de los 21 controles del framework (base legal, riesgos, arquitectura, cifrado, ARCO+, auditoría, conservación, mantenimiento…), cada una enlazada a su artefacto y captura real.
+- [docs/pruebas-OE4.md](docs/pruebas-OE4.md) — 15 casos de prueba (PRU-01/02/03) que verifican esos controles, cada uno con su evidencia.
+- [docs/evidencias/OE4/](docs/evidencias/OE4/) — todas las capturas de evidencia, organizadas por código de control.
+
+Cada documento de esta lista enlaza de vuelta aquí y a los demás relacionados, para poder navegar entre ellos sin memorizar la estructura de carpetas.

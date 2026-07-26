@@ -14,6 +14,9 @@ certs/
 # Notas locales con credenciales de demo (no se versionan)
 credenciales-demo.txt
 
+# Guía personal de exposición (material de preparación interno, no público)
+docs/guia-exposicion.md
+
 # Logs
 *.log
 npm-debug.log*
