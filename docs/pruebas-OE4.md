@@ -6,7 +6,13 @@
 **Objetivo específico:** OE4 — Implementación de la aplicación (sistema de citas y consultoría médica).
 **Fase:** Pruebas (PRU) — consolidación de las pruebas de verificación ya ejecutadas sobre los controles de Diseño y Desarrollo, organizadas en 3 casos de prueba (PRU-01, PRU-02, PRU-03) conforme a la fase de Pruebas del framework.
 
-[⬅ Volver al README](../README.md) &nbsp;·&nbsp; [Bitácora de evidencias OE4](registro-evidencias-OE4.md)
+## Documentación relacionada
+
+- [⬅ README principal](../README.md)
+- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — fichas completas por control (Análisis y Desarrollo).
+- [docs/politica-conservacion.md](politica-conservacion.md) — política de conservación (DYM-02).
+- [docs/matriz-acceso-roles.md](matriz-acceso-roles.md) — matriz de acceso por rol (DES-02).
+- [docs/evidencias/OE4/](evidencias/OE4/) — todas las capturas de evidencia.
 
 > Este documento no introduce controles nuevos ni código nuevo: consolida, en formato de evidencia trazable, pruebas que ya se ejecutaron y verificaron durante el desarrollo de la aplicación (ver [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) para las fichas completas de cada control).
 
@@ -50,11 +56,3 @@
 - **Casos con evidencia verificada:** 15/15.
 - **Casos marcados como PENDIENTE:** 0.
 - **Observación de precisión registrada:** PRU-01.6 — el código de estado (200) está verificado, pero la captura corresponde a una etapa temprana del endpoint (placeholder); la verificación funcional completa del contenido de las consultas queda cubierta por PRU-01.1 y PRU-01.2.
-
-## Documentación relacionada
-
-- [⬅ README principal](../README.md)
-- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — fichas completas por control (Análisis y Desarrollo).
-- [docs/politica-conservacion.md](politica-conservacion.md) — política de conservación (DYM-02).
-- [docs/matriz-acceso-roles.md](matriz-acceso-roles.md) — matriz de acceso por rol (DES-02).
-- [docs/evidencias/OE4/](evidencias/OE4/) — todas las capturas de evidencia.

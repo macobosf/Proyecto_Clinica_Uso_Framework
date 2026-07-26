@@ -1,6 +1,9 @@
 # Base de datos de la aplicación
 
-[⬅ Volver al README](../README.md)
+## Documentación relacionada
+
+- [⬅ README principal](../README.md) — puesta en marcha de la aplicación.
+- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — control DES-01 (cifrado en tránsito API↔PostgreSQL vía SSL).
 
 Este proyecto usa **exclusivamente el puerto 5544** para su base de datos
 PostgreSQL, a través del contenedor `piloto-pbd-db` definido en
@@ -28,8 +31,3 @@ docker ps --filter "name=piloto-pbd-db"
 ```
 
 y confirma que el mapeo de puertos mostrado sea `0.0.0.0:5544->5432/tcp`.
-
-## Documentación relacionada
-
-- [⬅ README principal](../README.md) — puesta en marcha de la aplicación.
-- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — control DES-01 (cifrado en tránsito API↔PostgreSQL vía SSL).

@@ -1,6 +1,11 @@
 # Política de conservación y eliminación segura (control DYM-02)
 
-[⬅ Volver al README](../README.md)
+## Documentación relacionada
+
+- [⬅ README principal](../README.md)
+- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — ficha del control DYM-02.
+- [docs/pruebas-OE4.md](pruebas-OE4.md) — casos de prueba PRU-01/02/03.
+- [conservacion.js](../backend/src/services/conservacion.js) — implementación del proceso de conservación.
 
 ## Propósito
 
@@ -75,10 +80,3 @@ ejecute el proceso.
 ejecuta el proceso bajo demanda y devuelve un resumen de cuántos registros
 se eliminaron/anonimizaron. Cada acción queda además registrada en el log
 de auditoría (`accion: ELIMINAR`).
-
-## Documentación relacionada
-
-- [⬅ README principal](../README.md)
-- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — ficha del control DYM-02.
-- [docs/pruebas-OE4.md](pruebas-OE4.md) — casos de prueba PRU-01/02/03.
-- [conservacion.js](../backend/src/services/conservacion.js) — implementación del proceso de conservación.

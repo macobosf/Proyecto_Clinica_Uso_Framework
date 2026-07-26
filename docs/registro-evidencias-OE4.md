@@ -6,7 +6,15 @@
 **Autor:** Marco Antonio Cobos Farfán — Universidad Politécnica Salesiana, Sede Cuenca — 2026
 **Objetivo específico:** OE4 — Implementación de la aplicación (sistema de citas y consultoría médica).
 
-[⬅ Volver al README](../README.md) &nbsp;·&nbsp; Ver también: [Pruebas OE4](pruebas-OE4.md) &nbsp;·&nbsp; [Capturas de evidencia](evidencias/OE4/)
+## Documentación relacionada
+
+- [⬅ README principal](../README.md) — puesta en marcha de la aplicación y cifrado en tránsito (DES-01).
+- [docs/pruebas-OE4.md](pruebas-OE4.md) — casos de prueba (PRU-01/02/03) que verifican los controles de Diseño y Desarrollo de esta bitácora.
+- [docs/inventario-datos.md](inventario-datos.md) — inventario y clasificación de datos (ANA-01/ANA-02).
+- [docs/matriz-acceso-roles.md](matriz-acceso-roles.md) — matriz de acceso por rol (DES-02).
+- [docs/politica-conservacion.md](politica-conservacion.md) — plazos de conservación y eliminación segura (DYM-02).
+- [docs/base-de-datos.md](base-de-datos.md) — configuración de PostgreSQL de la aplicación.
+- [docs/evidencias/OE4/](evidencias/OE4/) — todas las capturas de evidencia, organizadas por control.
 
 ---
 
@@ -335,13 +343,3 @@ Los controles de la fase de Planificación (PLA) y ANA-03 son de naturaleza orga
 ---
 
 *Registro consolidado de los 21 controles. Pendiente: confirmar los valores marcados [CONFIRMAR] contra el conteo real de la aplicación, y completar las capturas marcadas. En OE5 se consolida contra la matriz de trazabilidad como evidencia de Demostración y Evaluación (DSR).*
-
-## Documentación relacionada
-
-- [⬅ README principal](../README.md) — puesta en marcha de la aplicación y cifrado en tránsito (DES-01).
-- [docs/pruebas-OE4.md](pruebas-OE4.md) — casos de prueba (PRU-01/02/03) que verifican los controles de Diseño y Desarrollo de esta bitácora.
-- [docs/inventario-datos.md](inventario-datos.md) — inventario y clasificación de datos (ANA-01/ANA-02).
-- [docs/matriz-acceso-roles.md](matriz-acceso-roles.md) — matriz de acceso por rol (DES-02).
-- [docs/politica-conservacion.md](politica-conservacion.md) — plazos de conservación y eliminación segura (DYM-02).
-- [docs/base-de-datos.md](base-de-datos.md) — configuración de PostgreSQL de la aplicación.
-- [docs/evidencias/OE4/](evidencias/OE4/) — todas las capturas de evidencia, organizadas por control.

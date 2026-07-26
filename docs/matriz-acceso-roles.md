@@ -1,6 +1,10 @@
 # Matriz de acceso por roles — Aplicación PbD (LOPDP Ecuador)
 
-[⬅ Volver al README](../README.md)
+## Documentación relacionada
+
+- [⬅ README principal](../README.md)
+- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — control DES-02 (control de acceso por roles).
+- [docs/inventario-datos.md](inventario-datos.md) — clasificación de los datos que esta matriz protege.
 
 Este documento describe el control de acceso implementado en el Paso 2
 (autenticación y control de acceso por roles). Cada endpoint exige un JWT
@@ -46,9 +50,3 @@ requieren capacidad de crear ni desactivar cuentas de otro personal.
 > rol sobre rutas esqueleto. Cifrado de campos sensibles, registro de
 > consentimiento, auditoría y ejercicio de derechos ARCO+ se abordan en pasos
 > posteriores del framework PbD-LOPDP.
-
-## Documentación relacionada
-
-- [⬅ README principal](../README.md)
-- [docs/registro-evidencias-OE4.md](registro-evidencias-OE4.md) — control DES-02 (control de acceso por roles).
-- [docs/inventario-datos.md](inventario-datos.md) — clasificación de los datos que esta matriz protege.
