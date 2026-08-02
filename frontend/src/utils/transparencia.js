@@ -21,3 +21,41 @@ export const TEXTO_TRANSPARENCIA = {
     'personal de acceso a tus datos: con él puedes hacer estos cambios tú mismo, ' +
     'sin necesidad de cuenta ni contraseña.',
 };
+
+// Fundamento legal (Art. 12 LOPDP: información al titular): sección aparte
+// del texto sencillo de arriba, para quien necesite el detalle exacto (p.
+// ej. un asesor legal). Los artículos citados son los mismos ya usados y
+// documentados en docs/registro-evidencias-OE4.md (matriz control↔artículo
+// de la tesis) — no se inventa ninguna cita nueva aquí. El nombre del
+// responsable, el contacto y la autoridad de control son de DEMOSTRACIÓN
+// (este es un piloto, no una clínica real): antes de cualquier uso real,
+// deben reemplazarse por los datos reales y verificarse con un asesor legal,
+// en especial la denominación vigente de la autoridad de control.
+export const FUNDAMENTO_LEGAL = {
+  responsable: 'Clínica Piloto PbD (proyecto de tesis — entorno de demostración)',
+  contacto: 'privacidad@clinica-piloto.test (canal de demostración)',
+  baseLegal: [
+    'Art. 7 LOPDP — Tratamiento legítimo de datos personales.',
+    'Art. 8 LOPDP — El consentimiento es la base de licitud del tratamiento de tus datos.',
+    'Art. 25 LOPDP — Tus datos de salud son una categoría especial de datos, con medidas reforzadas de protección.',
+  ],
+  conservacion: [
+    'Citas: 2 años desde la fecha de la cita (Art. 10 lit. i LOPDP — conservación), luego se eliminan.',
+    'Consultas médicas: 10 años desde la fecha de la cita que las originó (excepción del Art. 15 LOPDP: ' +
+      'obligación legal de conservar la historia clínica), luego se anonimizan de forma irreversible.',
+  ],
+  derechos: [
+    'Acceso — Art. 13 LOPDP.',
+    'Rectificación — Art. 14 LOPDP.',
+    'Eliminación — Art. 15 LOPDP.',
+    'Oposición — Art. 16 LOPDP.',
+    'Portabilidad — Art. 17 LOPDP.',
+    'Arts. 19 y 20 LOPDP regulan el procedimiento para ejercer estos derechos.',
+  ],
+  seguridad: [
+    'Art. 10 lit. j LOPDP — tus datos viajan y se guardan cifrados.',
+    'Art. 10 lit. k LOPDP — se mantiene un registro de auditoría de quién accede a tus datos (responsabilidad demostrada).',
+  ],
+  autoridadControl:
+    'Puedes presentar un reclamo ante la Superintendencia de Protección de Datos Personales del Ecuador.',
+};
