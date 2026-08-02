@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ShieldCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ExternalLink, ShieldCheck, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { API_URL } from '../api/config';
 import { CodigoQR } from '../components/CodigoQR';
 
@@ -79,6 +79,21 @@ export function ConsentimientoPublicoView({ token }) {
           <div className="tarjeta" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <p style={{ margin: 0 }}>Hola {aviso.nombres}, antes de continuar necesitamos tu confirmación:</p>
             <p style={{ margin: 0, color: 'var(--text-muted)' }}>{aviso.finalidad}</p>
+            <a
+              href="/privacidad"
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                fontSize: '0.85rem',
+                color: 'var(--accent)',
+              }}
+            >
+              <ExternalLink size={14} />
+              Lee nuestra política de privacidad completa
+            </a>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <button className="boton" onClick={() => decidir(true)} disabled={Boolean(enviando)}>
                 <ThumbsUp size={16} />
