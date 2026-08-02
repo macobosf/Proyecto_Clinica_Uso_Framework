@@ -1,10 +1,10 @@
 import { Info } from 'lucide-react';
 import { TEXTO_TRANSPARENCIA } from '../utils/transparencia';
 
-// Aviso de transparencia (control DIS-05): siempre visible, informativo,
-// distinto del bloque de consentimiento (que pide una decisión puntual al
-// registrar al paciente). Se usa tanto en /privacidad (página standalone)
-// como embebido en ArcoView (sección aparte, permanente).
+// Aviso de transparencia completo (control DIS-05). Vive únicamente en
+// /privacidad (PrivacidadView): el resto de pantallas donde el titular ya
+// vio el aviso o ya decidió (ArcoView, ConsentimientoPublicoView) solo
+// enlazan aquí (ver EnlacePoliticaPrivacidad) en vez de repetirlo entero.
 export function AvisoTransparencia() {
   return (
     <div className="tarjeta" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>

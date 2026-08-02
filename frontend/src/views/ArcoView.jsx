@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ShieldCheck, Pencil, X, Download, ShieldOff, Trash2 } from 'lucide-react';
 import { API_URL } from '../api/config';
-import { AvisoTransparencia } from '../components/AvisoTransparencia';
+import { EnlacePoliticaPrivacidad } from '../components/EnlacePoliticaPrivacidad';
 
 const CAMPOS_EDITABLES = ['nombres', 'apellidos', 'telefono', 'email'];
 
@@ -173,10 +173,11 @@ export function ArcoView({ token }) {
           <h1 style={{ fontSize: '1.25rem', margin: 0 }}>Mis datos</h1>
         </div>
 
-        {/* Aviso de transparencia (control DIS-05): sección aparte y
-            permanente, distinta del bloque de datos/consultas — se muestra
-            siempre, incluso mientras carga o si hay un error. */}
-        <AvisoTransparencia />
+        {/* Control DIS-05: quien llega aquí ya vio el aviso completo y decidió
+            (consentimiento) o ya es paciente activo — repetirlo entero en
+            cada visita es ruido, no transparencia. Solo el enlace para
+            releerlo cuando quiera. */}
+        <EnlacePoliticaPrivacidad />
 
         {cargando && <p style={{ color: 'var(--text-muted)' }}>Cargando…</p>}
 
