@@ -2,12 +2,19 @@ import { useEffect, useState } from 'react';
 import { AlertTriangle, ShieldAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const TIPOS = ['LOGIN_FALLIDO', 'ACCESO_DENEGADO', 'TOKEN_ARCO_INVALIDO', 'INTEGRIDAD_FALLIDA'];
+const TIPOS = [
+  'LOGIN_FALLIDO',
+  'ACCESO_DENEGADO',
+  'TOKEN_ARCO_INVALIDO',
+  'TOKEN_CONSENTIMIENTO_INVALIDO',
+  'INTEGRIDAD_FALLIDA',
+];
 
 const ETIQUETA_TIPO = {
   LOGIN_FALLIDO: 'Login fallido',
   ACCESO_DENEGADO: 'Acceso denegado',
   TOKEN_ARCO_INVALIDO: 'Token ARCO+ inválido',
+  TOKEN_CONSENTIMIENTO_INVALIDO: 'Token de consentimiento inválido',
   INTEGRIDAD_FALLIDA: 'Fallo de integridad',
 };
 

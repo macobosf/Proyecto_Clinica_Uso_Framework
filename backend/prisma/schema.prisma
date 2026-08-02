@@ -223,7 +223,8 @@ model LogAuditoria {
 /// sistema solo provee la evidencia para activar ese procedimiento.
 model EventoSeguridad {
   id          String   @id @default(uuid())
-  /// LOGIN_FALLIDO / ACCESO_DENEGADO / TOKEN_ARCO_INVALIDO / INTEGRIDAD_FALLIDA.
+  /// LOGIN_FALLIDO / ACCESO_DENEGADO / TOKEN_ARCO_INVALIDO /
+  /// TOKEN_CONSENTIMIENTO_INVALIDO / INTEGRIDAD_FALLIDA.
   tipo        String
   /// Breve y sin datos sensibles: nunca contraseñas ni contenido clínico
   /// (puede incluir un email de intento de login o una ruta solicitada,

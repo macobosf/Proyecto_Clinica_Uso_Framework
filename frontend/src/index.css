@@ -144,6 +144,11 @@ select {
   color: #991b1b;
 }
 
+.etiqueta-estado.pendiente {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
 .mensaje-error {
   color: #b91c1c;
   background: #fef2f2;

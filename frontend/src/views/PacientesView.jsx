@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Check, Copy, Pencil, Plus, X } from 'lucide-react';
+import { Pencil, Plus, RefreshCw, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { ConsentimientoAviso } from '../components/ConsentimientoAviso';
-import { TEXTO_CONSENTIMIENTO, VERSION_CONSENTIMIENTO } from '../utils/consentimiento';
+import { EnlaceConsentimientoQR } from '../components/EnlaceConsentimientoQR';
+
+const ETIQUETA_CONSENTIMIENTO = {
+  pendiente: { texto: 'Pendiente de confirmar', clase: 'pendiente' },
+  aceptado: { texto: 'Aceptado', clase: 'atendida' },
+  rechazado: { texto: 'Rechazado', clase: 'cancelada' },
+};
+
+function estadoConsentimiento(paciente) {
+  const ultimo = paciente.consentimientos?.[0];
+  if (!ultimo) return ETIQUETA_CONSENTIMIENTO.pendiente;
+  return ultimo.aceptado ? ETIQUETA_CONSENTIMIENTO.aceptado : ETIQUETA_CONSENTIMIENTO.rechazado;
+}
 
 const FORMULARIO_VACIO = {
   identificacion: '',
@@ -31,12 +42,10 @@ export function PacientesView() {
   const [formulario, setFormulario] = useState(FORMULARIO_VACIO);
   const [guardando, setGuardando] = useState(false);
   const [errorFormulario, setErrorFormulario] = useState('');
-  // Nunca premarcado: cada apertura del formulario de alta arranca en false.
-  const [consentimientoAceptado, setConsentimientoAceptado] = useState(false);
 
-  // Enlace ARCO+ del último paciente registrado, para entregárselo (control DES-03).
-  const [enlaceArco, setEnlaceArco] = useState(null);
-  const [enlaceCopiado, setEnlaceCopiado] = useState(false);
+  // Paciente recién creado, en espera de que confirme su consentimiento
+  // escaneando el QR (control DIS-03).
+  const [pacienteEnEsperaDeQR, setPacienteEnEsperaDeQR] = useState(null);
 
   async function cargarPacientes() {
     setCargando(true);
@@ -60,7 +69,6 @@ export function PacientesView() {
     setEditandoId(null);
     setFormulario(FORMULARIO_VACIO);
     setErrorFormulario('');
-    setConsentimientoAceptado(false);
     setFormularioVisible(true);
   }
 
@@ -96,24 +104,12 @@ export function PacientesView() {
         await solicitar(`/api/pacientes/${editandoId}`, { method: 'PUT', body: formulario });
       } else {
         const pacienteCreado = await solicitar('/api/pacientes', { method: 'POST', body: formulario });
-        // Consentimiento informado (control DIS-03): se registra la decisión
-        // tomada en el momento del registro, sea aceptación o rechazo — el
-        // checkbox nunca llega premarcado, así que refleja una elección
-        // explícita de quien atiende al paciente. El bloqueo real para
-        // agendar citas ocurre después, en CitasView / backend.
-        const consentimiento = await solicitar(`/api/pacientes/${pacienteCreado.id}/consentimiento`, {
-          method: 'POST',
-          body: {
-            finalidad: TEXTO_CONSENTIMIENTO,
-            aceptado: consentimientoAceptado,
-            version: VERSION_CONSENTIMIENTO,
-          },
-        });
-        // El paciente ejerce sus derechos ARCO+ por este enlace, sin cuenta de personal (DES-03).
-        setEnlaceCopiado(false);
-        setEnlaceArco({
+        // Consentimiento informado (control DIS-03): quien decide es el
+        // propio paciente, no RECEPCION — se le entrega un QR (ver
+        // EnlaceConsentimientoQR) para que confirme desde su dispositivo.
+        setPacienteEnEsperaDeQR({
+          id: pacienteCreado.id,
           nombre: `${pacienteCreado.nombres} ${pacienteCreado.apellidos}`,
-          url: `${window.location.origin}/arco/${consentimiento.tokenArco}`,
         });
       }
       cerrarFormulario();
@@ -129,54 +125,35 @@ export function PacientesView() {
     <section style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h2 style={{ margin: 0 }}>Pacientes</h2>
-        {puedeGestionar && !formularioVisible && (
-          <button className="boton" onClick={abrirFormularioNuevo}>
-            <Plus size={18} />
-            Nuevo paciente
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className="boton boton-secundario" onClick={cargarPacientes} disabled={cargando}>
+            <RefreshCw size={16} />
+            Actualizar
           </button>
-        )}
+          {puedeGestionar && !formularioVisible && (
+            <button className="boton" onClick={abrirFormularioNuevo}>
+              <Plus size={18} />
+              Nuevo paciente
+            </button>
+          )}
+        </div>
       </div>
 
       {error && <p className="mensaje-error">{error}</p>}
 
-      {enlaceArco && (
-        <div className="tarjeta" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      {pacienteEnEsperaDeQR && (
+        <div className="tarjeta" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <strong>Enlace ARCO+ para {enlaceArco.nombre}</strong>
-            <button className="boton boton-secundario" onClick={() => setEnlaceArco(null)}>
+            <strong>Consentimiento pendiente — {pacienteEnEsperaDeQR.nombre}</strong>
+            <button className="boton boton-secundario" onClick={() => setPacienteEnEsperaDeQR(null)}>
               <X size={16} />
               Cerrar
             </button>
           </div>
-          <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-            Entrégale este enlace al paciente: le permite acceder, corregir, oponerse o eliminar sus
-            datos sin necesitar una cuenta de personal.
-          </p>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input
-              readOnly
-              value={enlaceArco.url}
-              onFocus={(e) => e.target.select()}
-              style={{
-                flex: 1,
-                padding: '0.5rem 0.65rem',
-                border: '1px solid var(--border)',
-                borderRadius: '0.375rem',
-                background: 'var(--surface)',
-                color: 'var(--text)',
-              }}
-            />
-            <button
-              className="boton"
-              onClick={async () => {
-                await navigator.clipboard.writeText(enlaceArco.url);
-                setEnlaceCopiado(true);
-              }}
-            >
-              {enlaceCopiado ? <Check size={16} /> : <Copy size={16} />}
-              {enlaceCopiado ? 'Copiado' : 'Copiar'}
-            </button>
-          </div>
+          <EnlaceConsentimientoQR
+            pacienteId={pacienteEnEsperaDeQR.id}
+            onConfirmado={cargarPacientes}
+          />
         </div>
       )}
 
@@ -238,12 +215,6 @@ export function PacientesView() {
             </label>
           </div>
 
-          {!editandoId && (
-            <div style={{ marginTop: '1rem' }}>
-              <ConsentimientoAviso aceptado={consentimientoAceptado} onCambiar={setConsentimientoAceptado} />
-            </div>
-          )}
-
           {errorFormulario && (
             <p className="mensaje-error" style={{ marginTop: '0.75rem' }}>
               {errorFormulario}
@@ -273,34 +244,41 @@ export function PacientesView() {
                 <th>Teléfono</th>
                 <th>Email</th>
                 <th>Estado</th>
+                <th>Consentimiento</th>
                 {puedeGestionar && <th></th>}
               </tr>
             </thead>
             <tbody>
-              {pacientes.map((paciente) => (
-                <tr key={paciente.id}>
-                  <td>{paciente.identificacion}</td>
-                  <td>{paciente.nombres}</td>
-                  <td>{paciente.apellidos}</td>
-                  <td>{aFechaInput(paciente.fechaNacimiento)}</td>
-                  <td>{paciente.sexo}</td>
-                  <td>{paciente.telefono}</td>
-                  <td>{paciente.email || '—'}</td>
-                  <td>
-                    <span className={`etiqueta-estado ${paciente.activo ? 'atendida' : 'cancelada'}`}>
-                      {paciente.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                  </td>
-                  {puedeGestionar && (
+              {pacientes.map((paciente) => {
+                const consentimiento = estadoConsentimiento(paciente);
+                return (
+                  <tr key={paciente.id}>
+                    <td>{paciente.identificacion}</td>
+                    <td>{paciente.nombres}</td>
+                    <td>{paciente.apellidos}</td>
+                    <td>{aFechaInput(paciente.fechaNacimiento)}</td>
+                    <td>{paciente.sexo}</td>
+                    <td>{paciente.telefono}</td>
+                    <td>{paciente.email || '—'}</td>
                     <td>
-                      <button className="boton boton-secundario" onClick={() => abrirFormularioEdicion(paciente)}>
-                        <Pencil size={14} />
-                        Editar
-                      </button>
+                      <span className={`etiqueta-estado ${paciente.activo ? 'atendida' : 'cancelada'}`}>
+                        {paciente.activo ? 'Activo' : 'Inactivo'}
+                      </span>
                     </td>
-                  )}
-                </tr>
-              ))}
+                    <td>
+                      <span className={`etiqueta-estado ${consentimiento.clase}`}>{consentimiento.texto}</span>
+                    </td>
+                    {puedeGestionar && (
+                      <td>
+                        <button className="boton boton-secundario" onClick={() => abrirFormularioEdicion(paciente)}>
+                          <Pencil size={14} />
+                          Editar
+                        </button>
+                      </td>
+                    )}
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

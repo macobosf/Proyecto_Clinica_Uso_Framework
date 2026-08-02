@@ -7,6 +7,7 @@ import { AuditoriaView } from './views/AuditoriaView';
 import { SeguridadView } from './views/SeguridadView';
 import { EstadoPrivacidadView } from './views/EstadoPrivacidadView';
 import { ArcoView } from './views/ArcoView';
+import { ConsentimientoPublicoView } from './views/ConsentimientoPublicoView';
 import { PrivacidadView } from './views/PrivacidadView';
 import { Layout } from './components/Layout';
 
@@ -54,6 +55,15 @@ function App() {
 
   if (coincidenciaArco) {
     return <ArcoView token={coincidenciaArco[1]} />;
+  }
+
+  // Enlace de consentimiento (control DIS-03): igual que ARCO+, el paciente
+  // llega desde el QR que le entrega RECEPCION, así que se resuelve desde
+  // la URL real del navegador, antes de montar el AuthProvider.
+  const coincidenciaConsentimiento = pathname.match(/^\/consentimiento\/([^/]+)\/?$/);
+
+  if (coincidenciaConsentimiento) {
+    return <ConsentimientoPublicoView token={coincidenciaConsentimiento[1]} />;
   }
 
   return (

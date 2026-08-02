@@ -37,15 +37,18 @@ router.put(
   asyncHandler(pacientesController.editar),
 );
 
-// Consentimiento informado (control DIS-03, Art. 7 LOPDP). RECEPCION es
-// quien atiende al paciente al momento del registro, por eso es la única
-// que puede asentarlo; la lectura sigue el mismo patrón que el resto de
-// datos de Paciente (ordinarios, visibles para los 3 roles).
+// Consentimiento informado (control DIS-03, Art. 7 LOPDP). RECEPCION solo
+// genera el enlace de un solo propósito (para el QR que entrega en el
+// mostrador); quien confirma o rechaza es el propio paciente, desde su
+// dispositivo, vía /api/consentimiento/:token (ver consentimientoPublicoRoutes
+// y consentimientoController.registrarPublico). La lectura del estado
+// vigente sigue el mismo patrón que el resto de datos de Paciente
+// (ordinarios, visibles para los 3 roles).
 router.post(
-  '/:id/consentimiento',
+  '/:id/consentimiento/enlace',
   authRequired,
   requireRol('RECEPCION'),
-  asyncHandler(consentimientoController.registrar),
+  asyncHandler(consentimientoController.generarEnlace),
 );
 
 router.get(

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CalendarPlus, CheckCircle2, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { ConsentimientoAviso } from '../components/ConsentimientoAviso';
-import { TEXTO_CONSENTIMIENTO, VERSION_CONSENTIMIENTO } from '../utils/consentimiento';
+import { EnlaceConsentimientoQR } from '../components/EnlaceConsentimientoQR';
 
 const FORMULARIO_VACIO = { pacienteId: '', medicoId: '', fechaHora: '' };
 
@@ -38,8 +37,6 @@ export function CitasView() {
   // agendamiento (control DIS-03). null = aún no se sabe / no aplica.
   const [tieneConsentimientoVigente, setTieneConsentimientoVigente] = useState(null);
   const [verificandoConsentimiento, setVerificandoConsentimiento] = useState(false);
-  // Nunca premarcado: cada selección de paciente reinicia este checkbox.
-  const [consentimientoAceptado, setConsentimientoAceptado] = useState(false);
 
   async function cargarCitas() {
     setCargando(true);
@@ -62,7 +59,6 @@ export function CitasView() {
   async function abrirFormulario() {
     setErrorFormulario('');
     setFormulario(FORMULARIO_VACIO);
-    setConsentimientoAceptado(false);
     setTieneConsentimientoVigente(null);
     setFormularioVisible(true);
     try {
@@ -87,7 +83,6 @@ export function CitasView() {
 
   async function seleccionarPaciente(pacienteId) {
     actualizarCampo('pacienteId', pacienteId);
-    setConsentimientoAceptado(false);
     setTieneConsentimientoVigente(null);
 
     if (!pacienteId) return;
@@ -109,23 +104,16 @@ export function CitasView() {
       return;
     }
 
-    if (tieneConsentimientoVigente === false && !consentimientoAceptado) {
-      setErrorFormulario('Este paciente no tiene un consentimiento vigente: marca la aceptación para poder agendar');
+    if (tieneConsentimientoVigente === false) {
+      setErrorFormulario(
+        'Este paciente no tiene un consentimiento vigente: pídele que confirme escaneando el código QR',
+      );
       return;
     }
 
     setGuardando(true);
     setErrorFormulario('');
     try {
-      if (tieneConsentimientoVigente === false && consentimientoAceptado) {
-        // Se captura el consentimiento aquí mismo (control DIS-03), justo
-        // antes de agendar la primera cita del paciente.
-        await solicitar(`/api/pacientes/${formulario.pacienteId}/consentimiento`, {
-          method: 'POST',
-          body: { finalidad: TEXTO_CONSENTIMIENTO, aceptado: true, version: VERSION_CONSENTIMIENTO },
-        });
-      }
-
       await solicitar('/api/citas', {
         method: 'POST',
         body: { ...formulario, fechaHora: new Date(formulario.fechaHora).toISOString() },
@@ -219,7 +207,10 @@ export function CitasView() {
 
           {tieneConsentimientoVigente === false && (
             <div style={{ marginTop: '1rem' }}>
-              <ConsentimientoAviso aceptado={consentimientoAceptado} onCambiar={setConsentimientoAceptado} />
+              <EnlaceConsentimientoQR
+                pacienteId={formulario.pacienteId}
+                onConfirmado={() => setTieneConsentimientoVigente(true)}
+              />
             </div>
           )}
 
@@ -233,7 +224,7 @@ export function CitasView() {
             className="boton"
             style={{ marginTop: '1rem' }}
             onClick={agendarCita}
-            disabled={guardando || verificandoConsentimiento || (tieneConsentimientoVigente === false && !consentimientoAceptado)}
+            disabled={guardando || verificandoConsentimiento || tieneConsentimientoVigente === false}
           >
             {guardando ? 'Agendando…' : 'Agendar'}
           </button>

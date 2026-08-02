@@ -72,6 +72,27 @@ para este entorno de demostración local — ninguno se sube al repositorio
 
 ### Backend (HTTPS)
 
+Un certificado autofirmado a mano con `openssl` (más abajo) funciona, pero el
+navegador lo rechaza en silencio: cualquier `fetch` del frontend a
+`https://localhost:3000` falla (`ERR_CERT_AUTHORITY_INVALID`) hasta que se
+visita esa URL manualmente y se acepta la advertencia de seguridad — hay que
+repetir ese paso cada vez que se regenera el certificado. Para evitarlo, la
+opción recomendada en desarrollo es generar el certificado con
+[mkcert](https://github.com/FiloSottile/mkcert), que emite certificados
+firmados por una CA local de confianza (se instala una única vez en el
+almacén de confianza del sistema y los navegadores):
+
+```bash
+bash docs/scripts/generar-certificados-confiables.sh
+```
+
+Requiere sudo la primera vez (instala `mkcert` y registra su CA local).
+Después de ejecutarlo, `backend/certs/clave.pem` y `certificado.pem` quedan
+listos y el frontend puede llamar al backend sin ninguna advertencia.
+
+Alternativa manual con `openssl` (certificado autofirmado, requiere aceptar
+la advertencia del navegador una vez por certificado generado):
+
 ```bash
 openssl req -x509 -newkey rsa:2048 -keyout clave.pem -out certificado.pem -days 365 -nodes \
   -subj "/C=EC/ST=Azuay/L=Cuenca/O=Aplicacion PbD Tesis/OU=Demostracion/CN=localhost"

@@ -62,7 +62,17 @@ async function crear(req, res) {
 
 async function listar(req, res) {
   const pacientes = await prisma.paciente.findMany({
-    select: CAMPOS_PACIENTE,
+    select: {
+      ...CAMPOS_PACIENTE,
+      // Estado del consentimiento (control DIS-03): solo el registro más
+      // reciente, para que RECEPCION vea de un vistazo si el paciente ya
+      // confirmó desde el QR sin tener que consultarlo aparte.
+      consentimientos: {
+        select: { aceptado: true, fechaHora: true },
+        orderBy: { fechaHora: 'desc' },
+        take: 1,
+      },
+    },
     orderBy: { nombres: 'asc' },
   });
   return res.json(pacientes);

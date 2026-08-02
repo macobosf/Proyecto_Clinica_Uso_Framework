@@ -2,7 +2,13 @@ const prisma = require('./prismaClient');
 
 // Cerrados a propósito, igual que en el servicio de auditoría: evitan que
 // un error de tipeo en un punto de instrumentación cree valores basura.
-const TIPOS_VALIDOS = ['LOGIN_FALLIDO', 'ACCESO_DENEGADO', 'TOKEN_ARCO_INVALIDO', 'INTEGRIDAD_FALLIDA'];
+const TIPOS_VALIDOS = [
+  'LOGIN_FALLIDO',
+  'ACCESO_DENEGADO',
+  'TOKEN_ARCO_INVALIDO',
+  'TOKEN_CONSENTIMIENTO_INVALIDO',
+  'INTEGRIDAD_FALLIDA',
+];
 
 function obtenerIp(req) {
   return req?.ip || req?.socket?.remoteAddress || null;

@@ -13,6 +13,7 @@ const auditoriaRoutes = require('./routes/auditoriaRoutes');
 const seguridadRoutes = require('./routes/seguridadRoutes');
 const mantenimientoRoutes = require('./routes/mantenimientoRoutes');
 const arcoRoutes = require('./routes/arcoRoutes');
+const consentimientoPublicoRoutes = require('./routes/consentimientoPublicoRoutes');
 
 const app = express();
 
@@ -30,6 +31,11 @@ app.use('/api/auth', authRoutes);
 // pero protegido por su propio token de un solo propósito (validarTokenArco,
 // firmado con TOKEN_ARCO_SECRET). El paciente no es personal interno.
 app.use('/api/arco', arcoRoutes);
+
+// Enlace de consentimiento (Art. 7 LOPDP): también público, protegido por su
+// propio token de un solo propósito — el paciente confirma o rechaza desde
+// su propio dispositivo tras escanear el QR que le entrega RECEPCION.
+app.use('/api/consentimiento', consentimientoPublicoRoutes);
 
 // Toda otra ruta bajo /api exige un JWT válido; el control por rol se aplica
 // dentro de cada archivo de rutas según la matriz de acceso (ver
