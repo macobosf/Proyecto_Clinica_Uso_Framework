@@ -1,0 +1,39 @@
+# Blueprint de Render para el backend del piloto (ver README, sección
+# "Despliegue"). Con esto, en Render: New > Blueprint > seleccionar este
+# repo, y solo hay que rellenar a mano las variables marcadas "sync: false"
+# (secretos que no se comparten en el blueprint ni en el repo).
+#
+# La base de datos NO se declara aquí: se usa Neon (Postgres gestionado
+# externo), no el Postgres propio de Render, así que DATABASE_URL se pega a
+# mano con la cadena de conexión de Neon (incluye sslmode=require).
+services:
+  - type: web
+    name: piloto-pbd-backend
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: pnpm install
+    startCommand: pnpm start:prod
+    envVars:
+      # Cadena de conexión de Neon (con sslmode=require). Pégala aquí
+      # manualmente después de crear el proyecto en Neon.
+      - key: DATABASE_URL
+        sync: false
+      # Cualquier string largo y aleatorio sirve; Render lo genera solo.
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TOKEN_ARCO_SECRET
+        generateValue: true
+      - key: TOKEN_CONSENTIMIENTO_SECRET
+        generateValue: true
+      # Debe decodificar (base64) a exactamente 32 bytes (AES-256): Render no
+      # puede generar este formato exacto solo, génerala tú con:
+      #   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+      - key: CLAVE_CIFRADO
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: RETENCION_CITAS_DIAS
+        value: "730"
+      - key: RETENCION_CONSULTAS_DIAS
+        value: "3650"

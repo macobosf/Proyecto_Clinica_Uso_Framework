@@ -1,4 +1,5 @@
 const fs = require('fs');
+const http = require('http');
 const https = require('https');
 const path = require('path');
 const express = require('express');
@@ -58,15 +59,30 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 
 // Cifrado en tránsito (control DES-01, complemento del cifrado en reposo de
-// los campos de salud). Certificado autofirmado propio de este entorno de
-// demostración — ver README para el detalle y la equivalencia en producción.
-const opcionesHttps = {
-  key: fs.readFileSync(path.join(__dirname, '..', 'certs', 'clave.pem')),
-  cert: fs.readFileSync(path.join(__dirname, '..', 'certs', 'certificado.pem')),
-};
+// los campos de salud). En local, este servidor termina TLS él mismo con el
+// certificado de backend/certs/ (autofirmado u obtenido con mkcert, ver
+// README). En un despliegue real (Render y equivalentes), es la plataforma
+// la que termina TLS en su borde con un certificado de una CA real y reenvía
+// HTTP en su red interna/privada — el navegador sigue viendo HTTPS de punta
+// a punta, así que el control se sigue cumpliendo; el servidor detecta la
+// ausencia de esos certificados (no se suben al repo) y sirve HTTP simple
+// para que la plataforma pueda conectarse.
+const RUTA_CLAVE = path.join(__dirname, '..', 'certs', 'clave.pem');
+const RUTA_CERTIFICADO = path.join(__dirname, '..', 'certs', 'certificado.pem');
 
-https.createServer(opcionesHttps, app).listen(PORT, () => {
-  console.log(`Servidor backend escuchando (HTTPS) en el puerto ${PORT}`);
-});
+if (fs.existsSync(RUTA_CLAVE) && fs.existsSync(RUTA_CERTIFICADO)) {
+  const opcionesHttps = {
+    key: fs.readFileSync(RUTA_CLAVE),
+    cert: fs.readFileSync(RUTA_CERTIFICADO),
+  };
+
+  https.createServer(opcionesHttps, app).listen(PORT, () => {
+    console.log(`Servidor backend escuchando (HTTPS) en el puerto ${PORT}`);
+  });
+} else {
+  http.createServer(app).listen(PORT, () => {
+    console.log(`Servidor backend escuchando (HTTP, TLS a cargo de la plataforma) en el puerto ${PORT}`);
+  });
+}
 
 module.exports = app;

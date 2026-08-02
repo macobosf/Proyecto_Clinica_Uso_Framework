@@ -125,3 +125,61 @@ Por ser autofirmados, herramientas como `curl` requieren `-k`/`--insecure` y
 los navegadores mostrarán una advertencia de certificado no confiable al
 probar la aplicación localmente — es el comportamiento esperado en este entorno
 de demo.
+
+## Despliegue (demo pública, gratuito)
+
+Para tener una URL pública de demostración (sin costo, pensada para un
+piloto/demo en vivo, no para producción real): **Neon** (PostgreSQL
+gestionado) + **Render** (backend) + **Vercel** (frontend). Los tres tienen
+capa gratuita permanente.
+
+El código ya está preparado para esto sin tocar nada del flujo local:
+
+- `backend/src/server.js` sirve HTTPS con certificado propio en local, y cae
+  automáticamente a HTTP simple si no encuentra `backend/certs/` (Render
+  termina TLS en su borde con un certificado real; el navegador sigue viendo
+  HTTPS de punta a punta).
+- `backend/package.json` tiene un script `start:prod` (aplica migraciones
+  pendientes y arranca, sin depender de un archivo `.env` — Render inyecta
+  las variables de entorno directamente).
+- `frontend/vercel.json` hace que cualquier ruta (`/arco/:token`,
+  `/consentimiento/:token`, `/privacidad`) sirva `index.html` en vez de dar
+  404 — necesario porque el paciente llega ahí por un enlace directo (QR),
+  no navegando desde dentro de la app.
+- `render.yaml` describe el servicio de Render como blueprint, para no
+  configurarlo campo por campo a mano.
+
+### 1. Base de datos — Neon
+
+1. Crea una cuenta en [neon.tech](https://neon.tech) y un proyecto nuevo.
+2. Copia la cadena de conexión que te da (ya incluye `sslmode=require`).
+
+### 2. Backend — Render
+
+1. Crea una cuenta en [render.com](https://render.com) y conecta este repositorio de GitHub.
+2. **New > Blueprint**, selecciona el repo: Render lee `render.yaml` y prepara el servicio `piloto-pbd-backend` (Node, plan free, `rootDir: backend`).
+3. Rellena a mano las dos variables marcadas como secretas:
+   - `DATABASE_URL`: la cadena de conexión de Neon del paso anterior.
+   - `CLAVE_CIFRADO`: genera una nueva (no reutilices la de tu `.env` local) con:
+     ```bash
+     node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+     ```
+   - El resto de secretos (`JWT_SECRET`, `TOKEN_ARCO_SECRET`, `TOKEN_CONSENTIMIENTO_SECRET`) Render los genera solos.
+4. Despliega. Anota la URL pública que te asigna (`https://piloto-pbd-backend-xxxx.onrender.com`).
+5. Siembra los 3 usuarios de demo contra la base de Neon: abre la pestaña **Shell** del servicio en Render y corre `node prisma/seed.js` (o hazlo desde tu máquina apuntando `DATABASE_URL` temporalmente a Neon y corriendo `pnpm exec prisma db seed`).
+
+### 3. Frontend — Vercel
+
+1. Crea una cuenta en [vercel.com](https://vercel.com) e importa el mismo repositorio.
+2. En la configuración del proyecto: **Root Directory** = `frontend` (Vercel detecta el workspace de pnpm y ajusta el install automáticamente).
+3. Variable de entorno: `VITE_API_URL` = la URL de Render del paso anterior.
+4. Despliega. Esa es la URL para la demo.
+
+### Limitaciones a tener presentes
+
+- **Cold start de Render**: el plan free "duerme" el backend tras ~15 min sin
+  tráfico; el primer request tras eso tarda ~30-50s. Abre la URL unos
+  minutos antes de la demo en vivo para que esté despierto.
+- Esto es para **demostración**, no producción real: no hay dominio propio,
+  backups gestionados ni alertas — ver la nota de "Producción real" más
+  arriba para lo que cambiaría en un despliegue real.
