@@ -139,4 +139,37 @@ async function editar(req, res) {
   }
 }
 
-module.exports = { crear, listar, obtener, editar };
+// Baja lógica iniciada por RECEPCION (a diferencia de arcoController.eliminar,
+// que es el propio paciente ejerciendo su derecho de eliminación vía su
+// enlace ARCO+, Art. 15 LOPDP). Existe para el caso en que el paciente nunca
+// llega a confirmar su consentimiento (o lo rechaza) desde el QR: sin un
+// enlace ARCO+ emitido (ese token solo se genera al registrar una decisión
+// de consentimiento), el paciente no tiene forma propia de darse de baja, y
+// el sistema tampoco puede tratar sus datos sin una base legal — RECEPCION
+// necesita poder cerrar ese registro igual. Nunca borra al paciente ni su
+// historial físicamente, mismo criterio que en todo el resto del sistema.
+async function darDeBaja(req, res) {
+  const existente = await prisma.paciente.findUnique({ where: { id: req.params.id } });
+
+  if (!existente) {
+    return res.status(404).json({ mensaje: 'Paciente no encontrado' });
+  }
+
+  const paciente = await prisma.paciente.update({
+    where: { id: req.params.id },
+    data: { activo: false },
+    select: CAMPOS_PACIENTE,
+  });
+
+  await registrarAuditoria({
+    usuarioId: req.usuario.id,
+    accion: 'EDITAR',
+    entidad: 'Paciente',
+    entidadId: paciente.id,
+    req,
+  });
+
+  return res.json(paciente);
+}
+
+module.exports = { crear, listar, obtener, editar, darDeBaja };

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pencil, Plus, RefreshCw, X } from 'lucide-react';
+import { Pencil, Plus, QrCode, RefreshCw, UserX, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { EnlaceConsentimientoQR } from '../components/EnlaceConsentimientoQR';
 
@@ -13,6 +13,14 @@ function estadoConsentimiento(paciente) {
   const ultimo = paciente.consentimientos?.[0];
   if (!ultimo) return ETIQUETA_CONSENTIMIENTO.pendiente;
   return ultimo.aceptado ? ETIQUETA_CONSENTIMIENTO.aceptado : ETIQUETA_CONSENTIMIENTO.rechazado;
+}
+
+// Sin consentimiento aceptado, el paciente no tiene enlace ARCO+ propio (ese
+// token solo se emite al registrar una decisión) — por eso, mientras no
+// acepte, RECEPCION sigue siendo quien puede reenviarle el código o, si
+// rechazó o nunca confirma, darlo de baja.
+function tieneConsentimientoAceptado(paciente) {
+  return paciente.consentimientos?.[0]?.aceptado === true;
 }
 
 const FORMULARIO_VACIO = {
@@ -43,9 +51,11 @@ export function PacientesView() {
   const [guardando, setGuardando] = useState(false);
   const [errorFormulario, setErrorFormulario] = useState('');
 
-  // Paciente recién creado, en espera de que confirme su consentimiento
-  // escaneando el QR (control DIS-03).
+  // Paciente en espera de que confirme su consentimiento escaneando el QR
+  // (control DIS-03) — se abre tanto al crear un paciente nuevo como al
+  // reenviar el código a uno existente que no confirmó.
   const [pacienteEnEsperaDeQR, setPacienteEnEsperaDeQR] = useState(null);
+  const [dandoDeBajaId, setDandoDeBajaId] = useState(null);
 
   async function cargarPacientes() {
     setCargando(true);
@@ -118,6 +128,33 @@ export function PacientesView() {
       setErrorFormulario(err.message || 'No se pudo guardar el paciente');
     } finally {
       setGuardando(false);
+    }
+  }
+
+  function reenviarCodigo(paciente) {
+    setPacienteEnEsperaDeQR({
+      id: paciente.id,
+      nombre: `${paciente.nombres} ${paciente.apellidos}`,
+    });
+  }
+
+  async function darDeBaja(paciente) {
+    const confirmado = window.confirm(
+      `¿Confirmas dar de baja a ${paciente.nombres} ${paciente.apellidos}? ` +
+        'Ya no podrá agendársele citas ni usar el enlace de consentimiento; su historia clínica ' +
+        '(si tiene) se conserva igual.',
+    );
+    if (!confirmado) return;
+
+    setDandoDeBajaId(paciente.id);
+    setError('');
+    try {
+      await solicitar(`/api/pacientes/${paciente.id}/baja`, { method: 'PATCH' });
+      await cargarPacientes();
+    } catch (err) {
+      setError(err.message || 'No se pudo dar de baja al paciente');
+    } finally {
+      setDandoDeBajaId(null);
     }
   }
 
@@ -270,10 +307,28 @@ export function PacientesView() {
                     </td>
                     {puedeGestionar && (
                       <td>
-                        <button className="boton boton-secundario" onClick={() => abrirFormularioEdicion(paciente)}>
-                          <Pencil size={14} />
-                          Editar
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                          <button className="boton boton-secundario" onClick={() => abrirFormularioEdicion(paciente)}>
+                            <Pencil size={14} />
+                            Editar
+                          </button>
+                          {paciente.activo && !tieneConsentimientoAceptado(paciente) && (
+                            <>
+                              <button className="boton boton-secundario" onClick={() => reenviarCodigo(paciente)}>
+                                <QrCode size={14} />
+                                Reenviar código
+                              </button>
+                              <button
+                                className="boton boton-peligro"
+                                onClick={() => darDeBaja(paciente)}
+                                disabled={dandoDeBajaId === paciente.id}
+                              >
+                                <UserX size={14} />
+                                {dandoDeBajaId === paciente.id ? 'Dando de baja…' : 'Dar de baja'}
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     )}
                   </tr>

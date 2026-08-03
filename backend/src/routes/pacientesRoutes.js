@@ -37,6 +37,17 @@ router.put(
   asyncHandler(pacientesController.editar),
 );
 
+// Baja lógica iniciada por RECEPCION (Art. 15 LOPDP, ver pacientesController.darDeBaja):
+// para el paciente que nunca confirma o rechaza el consentimiento — no tiene
+// enlace ARCO+ propio (ese token solo se emite al registrar una decisión),
+// así que no puede darse de baja por sí mismo.
+router.patch(
+  '/:id/baja',
+  authRequired,
+  requireRol('RECEPCION'),
+  asyncHandler(pacientesController.darDeBaja),
+);
+
 // Consentimiento informado (control DIS-03, Art. 7 LOPDP). RECEPCION solo
 // genera el enlace de un solo propósito (para el QR que entrega en el
 // mostrador); quien confirma o rechaza es el propio paciente, desde su
