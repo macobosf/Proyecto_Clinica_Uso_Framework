@@ -55,10 +55,33 @@ async function verificarCifradoTransito() {
   const rutaClave = path.join(__dirname, '..', '..', 'certs', 'clave.pem');
   const certificadosPresentes = fs.existsSync(rutaCertificado) && fs.existsSync(rutaClave);
 
-  let sslBaseDatos = false;
+  // El backend cifra en tránsito de dos formas válidas, según entorno (ver
+  // server.js): en local, terminando TLS él mismo con el certificado de
+  // backend/certs/; en un despliegue real (Render y equivalentes), es la
+  // plataforma quien termina TLS en su borde con un certificado de una CA
+  // real, y el backend sirve HTTP simple en su red interna/privada — eso NO
+  // es una degradación del control, es la arquitectura esperada. La
+  // variable TLS_TERMINADO_EXTERNAMENTE (fijada en render.yaml) documenta
+  // explícitamente esa decisión, para no confundir "no hay certificado
+  // local" con "no hay cifrado en tránsito": si ninguna de las dos
+  // condiciones se cumple, ahí sí es una degradación real.
+  const tlsTerminadoPorPlataforma = process.env.TLS_TERMINADO_EXTERNAMENTE === 'true';
+  const transitoBackendOk = certificadosPresentes || tlsTerminadoPorPlataforma;
+
+  // "SHOW ssl" es la señal correcta para un Postgres autoalojado (nuestro
+  // docker-compose local, con ssl=on explícito) pero NO para un proveedor
+  // gestionado tipo Neon: ahí TLS lo termina el proxy/borde de Neon, y el
+  // proceso de Postgres que responde esta consulta reporta 'off' aunque la
+  // conexión del cliente haya sido, y solo pudiera haber sido, TLS (porque
+  // sslmode=require/verify-* hace que el propio driver rechace degradar a
+  // texto plano). Por eso, si el servidor no confirma SSL directamente, se
+  // acepta como señal válida que DATABASE_URL exija ese modo.
+  const urlExigeSsl = /sslmode=(require|verify-ca|verify-full)/.test(process.env.DATABASE_URL ?? '');
+
+  let sslServidor = false;
   try {
     const [fila] = await prisma.$queryRaw`SHOW ssl`;
-    sslBaseDatos = fila?.ssl === 'on';
+    sslServidor = fila?.ssl === 'on';
   } catch (error) {
     return {
       control: 'Cifrado en tránsito',
@@ -66,10 +89,15 @@ async function verificarCifradoTransito() {
       descripcion: `No se pudo consultar el estado de SSL en PostgreSQL: ${error.message}`,
     };
   }
+  const sslBaseDatos = sslServidor || urlExigeSsl;
 
-  if (!certificadosPresentes || !sslBaseDatos) {
+  if (!transitoBackendOk || !sslBaseDatos) {
     const partes = [];
-    if (!certificadosPresentes) partes.push('faltan los certificados HTTPS del backend');
+    if (!transitoBackendOk) {
+      partes.push(
+        'faltan los certificados HTTPS del backend y no está declarado TLS_TERMINADO_EXTERNAMENTE',
+      );
+    }
     if (!sslBaseDatos) partes.push('la conexión a PostgreSQL no exige SSL');
     return { control: 'Cifrado en tránsito', estado: 'FALLO', descripcion: partes.join('; ') };
   }
@@ -77,7 +105,9 @@ async function verificarCifradoTransito() {
   return {
     control: 'Cifrado en tránsito',
     estado: 'OK',
-    descripcion: 'El backend sirve por HTTPS (certificado presente) y PostgreSQL exige SSL en la conexión.',
+    descripcion: certificadosPresentes
+      ? 'El backend sirve por HTTPS (certificado presente) y PostgreSQL exige SSL en la conexión.'
+      : 'El backend sirve por HTTP detrás de una plataforma que termina TLS en su borde (declarado vía TLS_TERMINADO_EXTERNAMENTE) y PostgreSQL exige SSL en la conexión.',
   };
 }
 

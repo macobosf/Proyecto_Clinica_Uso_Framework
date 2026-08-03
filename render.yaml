@@ -31,6 +31,12 @@ services:
       #   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
       - key: CLAVE_CIFRADO
         sync: false
+      # Declara explícitamente que TLS lo termina la plataforma (Render), no
+      # este proceso — así el chequeo de "Cifrado en tránsito" del panel de
+      # Mantenimiento (control DYM-03) no confunde esto con una degradación
+      # real. Ver backend/src/services/mantenimiento-privacidad.js.
+      - key: TLS_TERMINADO_EXTERNAMENTE
+        value: "true"
       - key: JWT_EXPIRES_IN
         value: 8h
       - key: RETENCION_CITAS_DIAS
