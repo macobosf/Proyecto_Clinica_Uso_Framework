@@ -93,6 +93,7 @@ model Paciente {
   citas            Cita[]
   consultas        Consulta[]
   consentimientos  Consentimiento[]
+  enlacesAcceso    EnlaceAcceso[]
 
   @@map("pacientes")
 }
@@ -177,6 +178,39 @@ model Consentimiento {
   version    String
 
   @@map("consentimientos")
+}
+
+/// Propósito de un EnlaceAcceso: cada uno con su propia vida útil.
+enum PropositoEnlace {
+  /// Confirmar/rechazar el tratamiento de datos (control DIS-03, Art. 7).
+  /// Vida corta (20 min): se genera para el QR que RECEPCION entrega en el
+  /// mostrador.
+  CONSENTIMIENTO
+  /// Acceso ARCO+ del propio titular (Art. 13-17). Vida larga (30 días).
+  ARCO
+}
+
+/// Enlace de acceso de un paciente, identificado por un token CORTO y opaco
+/// (generado en la app, ver utils/tokenCorto.js) en vez de un JWT
+/// autocontenido. Antes este mecanismo usaba JWT firmados (más simples de
+/// validar sin consultar la base de datos), pero un JWT con el pacienteId y
+/// metadatos ronda los 300 caracteres: el QR que representa esa URL exige
+/// una versión tan densa (69x69 módulos) que, aunque se renderiza bien en
+/// píxeles, falla al escanearlo con la cámara de un celular contra una
+/// pantalla (muaré, brillo, enfoque) — se verificó en un celular real. Un
+/// identificador corto y aleatorio, sin nada codificado dentro, produce un
+/// QR de muchos menos módulos y confiablemente escaneable; el costo es que
+/// SÍ hay que consultar esta tabla para validarlo (ya no es autocontenido).
+model EnlaceAcceso {
+  /// Token corto (~22 caracteres, aleatorio) que va en la URL/QR.
+  id         String          @id
+  pacienteId String
+  paciente   Paciente        @relation(fields: [pacienteId], references: [id])
+  proposito  PropositoEnlace
+  expiraEn   DateTime
+  createdAt  DateTime        @default(now())
+
+  @@map("enlaces_acceso")
 }
 
 /// Registro de auditoría: quién hizo qué, cuándo y sobre qué registro.

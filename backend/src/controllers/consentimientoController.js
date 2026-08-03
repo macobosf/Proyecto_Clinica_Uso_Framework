@@ -1,23 +1,29 @@
-const jwt = require('jsonwebtoken');
 const prisma = require('../services/prismaClient');
 const { registrarAuditoria } = require('../services/auditoria');
+const { generarTokenCorto } = require('../utils/tokenCorto');
 const { TEXTO_CONSENTIMIENTO, VERSION_CONSENTIMIENTO } = require('../utils/consentimiento');
 
-const EXPIRACION_TOKEN_ARCO = '30d';
-// Corto a propósito: este token solo debe vivir el tiempo que toma escanear
-// el QR en el mostrador y decidir — no es un enlace para guardar ni reenviar.
-const EXPIRACION_TOKEN_CONSENTIMIENTO = '20m';
+const VEINTE_MINUTOS_MS = 20 * 60 * 1000;
+const TREINTA_DIAS_MS = 30 * 24 * 60 * 60 * 1000;
 
 // Token de un solo propósito para el mecanismo ARCO+ (Art. 13/14 LOPDP):
-// firmado con un secreto SEPARADO del JWT_SECRET de personal, para que
-// comprometer uno no comprometa el otro. Se genera siempre al registrar la
-// decisión de consentimiento (acepte o rechace), porque el derecho de
-// acceso/rectificación del paciente sobre sus datos ordinarios no depende
-// de si aceptó el tratamiento de sus datos de salud.
-function generarTokenArco(pacienteId) {
-  return jwt.sign({ pacienteId, scope: 'arco' }, process.env.TOKEN_ARCO_SECRET, {
-    expiresIn: EXPIRACION_TOKEN_ARCO,
+// identificador corto y opaco (ver EnlaceAcceso en schema.prisma — reemplazó
+// al JWT anterior porque un JWT de ~300 caracteres produce un QR demasiado
+// denso para escanear con la cámara de un celular). Se genera siempre al
+// registrar la decisión de consentimiento (acepte o rechace), porque el
+// derecho de acceso/rectificación del paciente sobre sus datos ordinarios no
+// depende de si aceptó el tratamiento de sus datos de salud.
+async function generarTokenArco(pacienteId) {
+  const enlace = await prisma.enlaceAcceso.create({
+    data: {
+      id: generarTokenCorto(),
+      pacienteId,
+      proposito: 'ARCO',
+      expiraEn: new Date(Date.now() + TREINTA_DIAS_MS),
+    },
+    select: { id: true },
   });
+  return enlace.id;
 }
 
 const CAMPOS_CONSENTIMIENTO = {
@@ -54,13 +60,17 @@ async function generarEnlace(req, res) {
     return res.status(422).json({ mensaje: 'El paciente está inactivo' });
   }
 
-  const token = jwt.sign(
-    { pacienteId: paciente.id, scope: 'consentimiento_pendiente' },
-    process.env.TOKEN_CONSENTIMIENTO_SECRET,
-    { expiresIn: EXPIRACION_TOKEN_CONSENTIMIENTO },
-  );
+  const enlace = await prisma.enlaceAcceso.create({
+    data: {
+      id: generarTokenCorto(),
+      pacienteId: paciente.id,
+      proposito: 'CONSENTIMIENTO',
+      expiraEn: new Date(Date.now() + VEINTE_MINUTOS_MS),
+    },
+    select: { id: true },
+  });
 
-  return res.status(201).json({ token });
+  return res.status(201).json({ token: enlace.id });
 }
 
 // Página pública que ve el paciente antes de decidir (validarTokenConsentimiento
@@ -114,10 +124,19 @@ async function registrarPublico(req, res) {
     req,
   });
 
+  // Ya se usó (o se está descartando): limpia cualquier enlace de
+  // consentimiento pendiente de este paciente, incluidos los reenviados
+  // antes de este. No son de un solo uso por diseño previo del sistema
+  // (dependían solo de expirar), pero borrar el/los ya resueltos evita
+  // dejarlos vigentes sin necesidad durante el resto de su vida útil.
+  await prisma.enlaceAcceso.deleteMany({
+    where: { pacienteId: req.pacienteId, proposito: 'CONSENTIMIENTO' },
+  });
+
   // Se entrega en el mismo dispositivo desde el que decidió: es su propio
   // enlace de acceso/rectificación (Art. 13/14), no depende de si aceptó el
   // tratamiento de sus datos de salud.
-  const tokenArco = generarTokenArco(req.pacienteId);
+  const tokenArco = await generarTokenArco(req.pacienteId);
 
   return res.status(201).json({ ...consentimiento, tokenArco });
 }

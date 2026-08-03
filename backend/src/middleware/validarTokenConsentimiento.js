@@ -1,32 +1,31 @@
-const jwt = require('jsonwebtoken');
 const prisma = require('../services/prismaClient');
 const { registrarEventoSeguridad } = require('../services/seguridad');
 
-// Valida el token de un solo propósito del enlace de consentimiento (el que
-// se entrega como QR en el mostrador). Igual que validarTokenArco, NO
-// identifica a personal interno: solo adjunta el pacienteId que el enlace
-// habilita a decidir. Firmado con TOKEN_CONSENTIMIENTO_SECRET, separado
-// tanto del JWT_SECRET de personal como del TOKEN_ARCO_SECRET.
+// Valida el enlace de consentimiento (el que se entrega como QR en el
+// mostrador). A diferencia de un JWT, este token es un identificador corto
+// y opaco: no lleva nada codificado, así que hay que consultar EnlaceAcceso
+// para resolverlo (ver ese modelo en schema.prisma para el porqué del
+// cambio). Igual que antes, NO identifica a personal interno: solo
+// adjunta el pacienteId que el enlace habilita a decidir.
 async function validarTokenConsentimiento(req, res, next) {
   const { token } = req.params;
 
   try {
-    const payload = jwt.verify(token, process.env.TOKEN_CONSENTIMIENTO_SECRET);
-
-    if (payload.scope !== 'consentimiento_pendiente' || !payload.pacienteId) {
-      throw new Error('Token con alcance inválido');
-    }
-
-    const paciente = await prisma.paciente.findUnique({
-      where: { id: payload.pacienteId },
-      select: { activo: true },
+    const enlace = await prisma.enlaceAcceso.findUnique({
+      where: { id: token },
+      include: { paciente: { select: { activo: true } } },
     });
 
-    if (!paciente || !paciente.activo) {
-      throw new Error('Paciente inactivo');
+    if (
+      !enlace ||
+      enlace.proposito !== 'CONSENTIMIENTO' ||
+      enlace.expiraEn < new Date() ||
+      !enlace.paciente.activo
+    ) {
+      throw new Error('Enlace de consentimiento inválido, expirado o paciente inactivo');
     }
 
-    req.pacienteId = payload.pacienteId;
+    req.pacienteId = enlace.pacienteId;
     return next();
   } catch (error) {
     await registrarEventoSeguridad({

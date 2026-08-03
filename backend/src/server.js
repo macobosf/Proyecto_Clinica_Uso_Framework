@@ -29,8 +29,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // Mecanismo ARCO+ (Art. 13/14 LOPDP): también público frente a authRequired,
-// pero protegido por su propio token de un solo propósito (validarTokenArco,
-// firmado con TOKEN_ARCO_SECRET). El paciente no es personal interno.
+// pero protegido por su propio enlace de un solo propósito (validarTokenArco,
+// ver EnlaceAcceso en schema.prisma). El paciente no es personal interno.
 app.use('/api/arco', arcoRoutes);
 
 // Enlace de consentimiento (Art. 7 LOPDP): también público, protegido por su

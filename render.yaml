@@ -20,11 +20,10 @@ services:
       - key: DATABASE_URL
         sync: false
       # Cualquier string largo y aleatorio sirve; Render lo genera solo.
+      # (Los enlaces ARCO+/consentimiento ya no usan JWT propio, ver
+      # EnlaceAcceso en schema.prisma — por eso ya no hace falta
+      # TOKEN_ARCO_SECRET ni TOKEN_CONSENTIMIENTO_SECRET aquí.)
       - key: JWT_SECRET
-        generateValue: true
-      - key: TOKEN_ARCO_SECRET
-        generateValue: true
-      - key: TOKEN_CONSENTIMIENTO_SECRET
         generateValue: true
       # Debe decodificar (base64) a exactamente 32 bytes (AES-256): Render no
       # puede generar este formato exacto solo, génerala tú con:
