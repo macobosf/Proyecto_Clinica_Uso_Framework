@@ -73,7 +73,7 @@ export function EnlaceConsentimientoQR({ pacienteId, onConfirmado }) {
       {url && (
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ background: '#fff', padding: '0.5rem', borderRadius: '0.375rem', lineHeight: 0 }}>
-            <CodigoQR valor={url} tamano={150} />
+            <CodigoQR valor={url} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', flex: 1, minWidth: '220px' }}>
             <input

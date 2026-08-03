@@ -112,7 +112,7 @@ export function ConsentimientoPublicoView({ token }) {
               </p>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div style={{ background: '#fff', padding: '0.5rem', borderRadius: '0.375rem', lineHeight: 0 }}>
-                  <CodigoQR valor={resultado.urlArco} tamano={140} />
+                  <CodigoQR valor={resultado.urlArco} />
                 </div>
                 <input
                   readOnly
